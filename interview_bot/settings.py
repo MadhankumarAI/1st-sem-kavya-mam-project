@@ -44,7 +44,10 @@ DEBUG = os.getenv('ENVIRONMENT', 'Production').lower() == 'local'
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app',
     'https://*.railway.app',]
-
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 SITE_ID=2
 # Application definition
 

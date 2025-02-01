@@ -185,7 +185,8 @@
         class ChatRoom {
             constructor(roomName) {
                 this.roomName = roomName;
-                this.socket = new WebSocket(`ws://${window.location.host}/ws/chat/${encodeURIComponent(roomName)}/`);
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                this.socket = new WebSocket(`${protocol}${window.location.host}/ws/chat/${encodeURIComponent(roomName)}/`);
                 this.chatArea = document.querySelector(`.chat-area[data-room="${roomName}"]`);
                 this.chatLog = this.chatArea.querySelector('.chat-log');
                 this.messageInput = this.chatArea.querySelector('.chat-message-input');
