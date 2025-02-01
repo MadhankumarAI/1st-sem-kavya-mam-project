@@ -8,5 +8,5 @@ sys.path.append(project_root)
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'interview_bot.interview_bot.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'interview_bot.settings')
 application = get_wsgi_application()
