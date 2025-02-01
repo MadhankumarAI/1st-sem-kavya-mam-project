@@ -15,8 +15,17 @@ import os
 
 import dj_database_url
 import environ
+env = environ.Env(
+    DEBUG=(bool, False),
+    ENVIRONMENT=(str, 'production'),
+    POSTGRES_LOCALLY=(bool, False),
+    REDIS_URL=(str, 'redis://localhost:6379'),
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=(str, ''),
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=(str, ''),
+    SECRET_KEY=(str, 'default-secret-key-for-dev'),
+    DATABASE_URL=(str, ''),
+)
 
-env = environ.Env()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -148,15 +157,13 @@ DATABASES = {
 #     },
 # }
 # Near the top of settings.py with other env configuration
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Replace your current CHANNEL_LAYERS configuration
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [env('REDIS_URL')],
+            "hosts": ['redis://default:OFRYIVyBbJnyJCXLYpZMetUmYlsRbzrL@junction.proxy.rlwy.net:19915'],
         },
     }
 }
@@ -233,36 +240,22 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SELERLIZER = 'json'
 CELERY_RESULT_EXPIRES = 60 * 60 * 24
 broker_connection_retry_on_startup = True
-# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY','hahah')
-# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', ' hahaha')
-
-POSTGRES_LOCALLY = False
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
+POSTGRES_LOCALLY = True
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
-env = environ.Env(
-    # Set debug=False as default
-    DEBUG=(bool, False),
-    # Set default database URL
-    db_url=(str, 'sqlite:////' + str(BASE_DIR / 'db.sqlite3'))
-)
-
 # Read the .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Database configuration
 if ENVIRONMENT == 'production' or POSTGRES_LOCALLY:
     try:
         DATABASES = {
-            'default': dj_database_url.parse(env('db_url'))
+            'default': dj_database_url.parse('postgresql://postgres:wmhTLcmKsiYzpCNOWakeKmcwEnCCGqsD@junction.proxy.rlwy.net:36471/railway')
         }
     except Exception as e:
         print(f"Error connecting to PostgreSQL: {e}")
         # Fallback to SQLite
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+       
 else:
     DATABASES = {
         'default': {
