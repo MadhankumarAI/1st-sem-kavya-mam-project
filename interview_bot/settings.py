@@ -80,7 +80,7 @@ INSTALLED_APPS = [
 #         ],
 #         "AUTH_PARAMS" : { "access_type" : "online"}
 #     }
-# }
+# }        
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
