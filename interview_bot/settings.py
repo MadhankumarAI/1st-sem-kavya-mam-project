@@ -42,7 +42,8 @@ SECRET_KEY = 'django-insecure-)d$x3zh8y#qln!yc2wt4-3m29_utd$^rfylqji%ley!ls8(-k4
 DEBUG = os.getenv('ENVIRONMENT', 'Production').lower() == 'local'
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['htpps://interxai-production-72a5.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app',
+    'https://*.railway.app',]
 
 SITE_ID=2
 # Application definition
