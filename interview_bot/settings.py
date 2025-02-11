@@ -62,6 +62,8 @@ INSTALLED_APPS = [
     'groupchat',
     'simpleinterview',
     'social_django',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -82,7 +84,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
 ROOT_URLCONF = 'interview_bot.urls'
 
 TEMPLATES = [

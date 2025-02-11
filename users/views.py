@@ -1,4 +1,7 @@
 from django.shortcuts import render, redirect
+from openid.server.server import HTTP_OK
+from rest_framework.status import HTTP_400_BAD_REQUEST
+
 from .forms import *
 from django.contrib.auth import login, authenticate, logout
 from django.http import JsonResponse
@@ -7,36 +10,66 @@ import json
 from .utils import *
 from django.contrib import messages
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
+from .serializer import *
+
+class loginapi(APIView):
+    def post(self, request):
+        data = request.data
+        serializer=loginSearializer(data=data)
+        if not serializer.is_valid():
+            return Response({"some error":serializer.errors})
+        username = serializer.data['username']
+        password = serializer.data['password']
+        us = authenticate(username=username,password=password)
+        if us is None:
+            return  Response({
+                "error" : "Invalid username and password"
+            },status=HTTP_400_BAD_REQUEST)
+        token,_ = Token.objects.get_or_create(user=us)
+        return Response({
+            "token" : token.key,
+
+        },status = HTTP_OK)
+
+class registerapi(APIView):
+    def post(self, request):
+        data = request.data
+        serializer = loginSearializer(data=data)
+        if not serializer.is_valid():
+            return Response({"some error": serializer.errors})
+
+        if User.objects.filter(username=serializer.data['username']).exists():
+            return Response({
+                "error" : "username already exsists"
+            },status=HTTP_400_BAD_REQUEST)
+            # Create new user
+        try:
+            user = User.objects.create_user(  # Use create_user instead of create
+                username=serializer.data['username'],
+                password=serializer.data['password']
+            )
+            return Response({
+                "status": "success"
+            })
+        except Exception as e:
+            return Response({
+                "error": "Failed to create user"
+            },status=HTTP_OK)
 
 
 
 
-def register(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            # Store form data in session
-            user_data = {
-                'username': form.cleaned_data['username'],
-                'email': form.cleaned_data['email'],
-                'password': form.cleaned_data['password1'],
-            }
-            request.session['pending_user'] = user_data
-
-            # Generate and store verification code in session
-            code = generate_verification_code()
-            request.session['verification_code'] = code
-            request.session['code_generated_at'] = timezone.now().timestamp()
-
-            # Send verification email
-            send_verification_email(user_data['email'], code)
-
-            return redirect('verify_email')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'users/register.html', {'form': form})
-
-
+class send_mail(APIView):
+    def post(self, request):
+        data = request.data
+        serializer = sendCode(data)
+        if not serializer.is_valid():
+            return Response({"some error": serializer.errors})
+        send_verification_email(serializer['email'], serializer['code'])
 def verify_email(request):
     # Check if we have pending registration
     pending_user = request.session.get('pending_user')
@@ -109,21 +142,6 @@ def resend_code(request):
             return JsonResponse({'success': False, 'error': str(e)})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
-def login_view(request):
-    if request.method == 'POST':
-        form = CustomAuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-
-            if user is not None:
-                login(request, user)
-                return redirect('home')
-    else:
-        form = CustomAuthenticationForm()
-
-    return render(request, 'users/login.html', {'form': form})
 
 def logoutView(request):
     logout(request)
