@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Mail, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
 import Cookies from 'js-cookie';
+import toast from 'react-hot-toast';
 
 interface FormData {
   username: string;
@@ -27,6 +28,25 @@ const RegisterForm = () => {
   const [verificationStep, setVerificationStep] = useState<boolean>(false);
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [message, setMessage] = useState<string>('');
+  const [timer, setTimer] = useState<number>(60);
+  const [canResend, setCanResend] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    let interval: number;
+    if (verificationStep && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [verificationStep, timer]);
 
   const generateVerificationCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -67,45 +87,58 @@ const RegisterForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const sendVerificationCode = async () => {
+    setIsLoading(true);
+    const code = generateVerificationCode();
+    Cookies.set('verificationCode', code);
+
+    try {
+      const response = await fetch('http://localhost:8000/reg/send-mail/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          code: code
+        }),
+      });
+
+      if (response.ok) {
+        setVerificationStep(true);
+        setTimer(60);
+        setCanResend(false);
+        toast.success('Verification code has been sent to your email');
+      } else {
+        toast.error('Failed to send verification code');
+      }
+    } catch (error) {
+      toast.error('Error occurred while sending verification code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (canResend) {
+      await sendVerificationCode();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
     if (!verificationStep) {
-      // Generate and store verification code
-      const code = generateVerificationCode();
-      Cookies.set('verificationCode', code);
-
-      try {
-        // Send verification code to backend
-        const response = await fetch('http://localhost:8000/reg/send-mail/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            code: code
-          }),
-        });
-
-        if (response.ok) {
-          setVerificationStep(true);
-          setMessage('Verification code has been sent to your email');
-        } else {
-          setMessage('Failed to send verification code');
-        }
-      } catch (error) {
-        setMessage('Error occurred while sending verification code');
-      }
+      await sendVerificationCode();
     } else {
-      // Verify code and register user
+      setIsLoading(true);
       const storedCode = Cookies.get('verificationCode');
 
       if (verificationCode === storedCode) {
         try {
-          const response = await fetch('http://localhost:8000/reg', {
+          const response = await fetch('http://localhost:8000/reg/', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -114,31 +147,31 @@ const RegisterForm = () => {
           });
 
           if (response.ok) {
-            setMessage('Registration successful!');
-            // Redirect to login page after successful registration
-            window.location.href = '/login';
+            toast.success('Registration successful!');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 2000);
           } else {
-            setMessage('Registration failed');
+            toast.error('Registration failed');
           }
         } catch (error) {
-          setMessage('Error occurred during registration');
+          toast.error('Error occurred during registration');
         }
       } else {
-        setMessage('Invalid verification code');
+        toast.error('Invalid verification code');
       }
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center relative p-4">
-      {/* 3D Background - You'll need to implement your own background or remove this */}
-      <div className="absolute inset-0 -z-10">
-        {/* Add your background here */}
-      </div>
-
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h3 className="text-2xl font-bold text-gray-800">InterXAI</h3>
+          <p className="text-gray-600 mt-2">
+            {verificationStep ? 'Verify your email' : 'Create your account'}
+          </p>
         </div>
 
         {message && (
@@ -214,25 +247,55 @@ const RegisterForm = () => {
               </div>
             </>
           ) : (
-            <div>
+            <div className="space-y-4">
+              <div className="text-center mb-4">
+                <p className="text-sm text-gray-600">
+                  We've sent a verification code to your email address.
+                  Please enter it below to complete your registration.
+                </p>
+              </div>
               <div className="relative">
                 <input
                   type="text"
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg tracking-wider"
                   placeholder="Enter verification code"
+                  maxLength={6}
                 />
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">
+                  Time remaining: {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={!canResend || isLoading}
+                  className={`flex items-center ${canResend ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400'}`}
+                >
+                  <RefreshCw className="w-4 h-4 mr-1" />
+                  Resend Code
+                </button>
               </div>
             </div>
           )}
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center"
+            disabled={isLoading}
+            className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center ${
+              isLoading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
           >
-            {!verificationStep ? 'Create account' : 'Verify'}
-            <ArrowRight className="ml-2 w-5 h-5" />
+            {isLoading ? (
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                {!verificationStep ? 'Create account' : 'Verify'}
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </>
+            )}
           </button>
         </form>
 
