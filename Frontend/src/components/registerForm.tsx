@@ -79,7 +79,7 @@ const RegisterForm = () => {
 
       try {
         // Send verification code to backend
-        const response = await fetch('http://localhost:8000/send-mail/', {
+        const response = await fetch('http://localhost:8000/reg/send-mail/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ const RegisterForm = () => {
 
       if (verificationCode === storedCode) {
         try {
-          const response = await fetch('http://localhost:8000/', {
+          const response = await fetch('http://localhost:8000/reg', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

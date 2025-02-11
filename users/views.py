@@ -66,10 +66,11 @@ class registerapi(APIView):
 class send_mail(APIView):
     def post(self, request):
         data = request.data
-        serializer = sendCode(data)
+        serializer = sendCode(data=data)
         if not serializer.is_valid():
-            return Response({"some error": serializer.errors})
-        send_verification_email(serializer['email'], serializer['code'])
+            return Response({"some error": serializer.errors},status=HTTP_400_BAD_REQUEST)
+        send_verification_email(data['email'], data['code'])
+        return Response (status=HTTP_OK)
 def verify_email(request):
     # Check if we have pending registration
     pending_user = request.session.get('pending_user')
