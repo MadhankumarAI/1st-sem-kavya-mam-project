@@ -19,4 +19,6 @@ urlpatterns = [
     path('createposting/',views.create_posting,name='createposting'),
     path('createinterview/',views.create_custom_interview,name='createcustominterview'),
     path('attempted/',views.Attempted,name='attempted'),
-    ]
+    path('chat_create-<int:post>', views.chatcreate, name='compchatcreate'),
+    path('chat-<str:convoid>/', views.chat, name='compchat'),
+]

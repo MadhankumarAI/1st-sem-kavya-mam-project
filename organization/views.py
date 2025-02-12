@@ -1,5 +1,6 @@
 from operator import truediv
 
+import groq
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
@@ -356,10 +357,14 @@ def Apply(request):
         return Response({'error': 'invalid Application id'}, status=HTTP_400_BAD_REQUEST)
     obj = Application.objects.create(user=request.user,interview=Custominterviews.objects.get(id=Id))
     obj.save()
-    obj1 = Customconversation.objects.create(Application=obj)
-    obj1.save()
-    return redirect('chat',obj1.id)
-
+    return
+@login_required
+def chatcreate(request, applicationid):
+    if Application.objects.get(id=applicationid).first() is None:
+        messages.error(request,"Application Not found")
+        return redirect('home')
+    convo = Customconversation.objects.create(Application=Application.objects.get(id=applicationid).first())
+    return redirect('compchat', convoid=convo.id)
 @login_required
 @csrf_exempt
 def chat(request, convoid):
@@ -368,7 +373,6 @@ def chat(request, convoid):
     if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
         data = json.loads(request.body)
         user_response = data.get('response')
-
         if user_response:
             Customquestions.objects.create(convo=convo, question=user_response, user='user')
             questions_list = list(Customquestions.objects.filter(convo=convo).values_list('question', flat=True))
@@ -422,3 +426,86 @@ def chat(request, convoid):
         'convo': convo,
         'questions': questions_list,
     })
+
+
+@login_required
+def evaluate_interview(request, application_id):
+    groq_client = groq.Groq(api_key="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")
+    application = get_object_or_404(Application, id=application_id)
+
+    # Check if interview is already evaluated
+    if leaderBoard.objects.filter(Application=application).exists():
+        messages.warning(request, 'This interview has already been evaluated.')
+        return redirect('home')  # Replace 'home' with your home URL name
+    if application.isCheated:
+        messages.warning(request, 'This interview has recorded malpractice.')
+        return redirect('home')
+    if not application.attempted:
+        messages.warning(request, 'This interview has not been attempted.')
+        return redirect('home')
+    conversation = get_object_or_404(Customconversation, Application=application)
+    interview = application.interview
+    qa_pairs = Customquestions.objects.filter(convo=conversation).order_by('created_at')
+
+    if not qa_pairs.exists():
+        messages.error(request, 'No conversation found for evaluation.')
+        return redirect('home')  # Replace 'home' with your home URL name
+
+    # Extract questions and answers
+    questions = []
+    answers = []
+    timestamps = []
+
+    for i in range(0, len(qa_pairs), 2):  # Assuming alternating question-answer pairs
+        if i + 1 < len(qa_pairs):  # Make sure we have both Q and A
+            questions.append(qa_pairs[i].question)
+            answers.append(qa_pairs[i + 1].question)  # Answer stored in question field
+            timestamps.append((qa_pairs[i + 1].created_at - qa_pairs[i].created_at).total_seconds())
+
+    try:
+        # Initialize scores
+        technical_scores = []
+
+        # Evaluate each Q&A pair
+        for q, a in zip(questions, answers):
+            technical_score = evaluate_answer_quality(
+                groq_client,
+                q, a,
+                f"Job Post: {interview.post}\nExperience Required: {interview.experience}\nDescription: {interview.desc}"
+            )
+            technical_scores.append(technical_score)
+
+        # Evaluate corporate fit
+        corporate_fit_score = evaluate_corporate_fit(
+            groq_client,
+            json.dumps(list(zip(questions, answers))),
+            interview.desc
+        )
+        is_cheated = check_cheating(groq_client, json.dumps(list(zip(questions, answers))))
+        technical_weight = 0.6  # 60% weight for technical evaluation
+        corporate_fit_weight = 0.4  # 40% weight for corporate fit
+
+        final_score = (
+                (sum(technical_scores) / len(technical_scores) * technical_weight) +
+                (corporate_fit_score * corporate_fit_weight)
+        ) if technical_scores else 0
+
+        application.attempted = True
+        application.completed = True
+        application.isCheated = is_cheated
+        application.save()
+
+        # Create leaderboard entry
+        leaderBoard.objects.create(
+            Application=application,
+            Score=round(final_score, 2)
+        )
+
+        messages.success(request, 'Interview evaluation completed successfully.')
+
+    except Exception as e:
+        messages.error(request, f'Error during evaluation: {str(e)}')
+        application.attempted = True
+        application.completed = False
+        application.save()
+    return redirect('home')

@@ -6,5 +6,5 @@ admin.site.register(Custominterviews)
 admin.site.register(Application)
 admin.site.register(Customconversation)
 admin.site.register(Customquestions)
-
+admin.site.register(leaderBoard)
 

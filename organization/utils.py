@@ -133,3 +133,76 @@ def parse_ai_response(response_text):
             "Thank you for your response.",
             "Let's continue with our discussion."
         )
+
+
+def evaluate_answer_quality(groq_client, question, answer, criteria):
+    """Evaluate individual answer quality using Groq"""
+    prompt = f"""
+    Evaluate this interview answer based on the following:
+    Question: {question}
+    Answer: {answer}
+    Job Requirements: {criteria}
+
+    Provide a score out of 20 based on:
+    - Relevance and completeness (8 points)
+    - Technical accuracy (6 points)
+    - Communication clarity (6 points)
+
+    Return only the numeric score.
+    """
+
+    response = groq_client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model="mixtral-8x7b-32768",
+        temperature=0.1,
+    )
+
+    return float(response.choices[0].message.content.strip())
+
+
+def evaluate_corporate_fit(groq_client, conversation_history, job_desc):
+    """Evaluate overall corporate fit using Groq"""
+    prompt = f"""
+    Evaluate this candidate's alignment with job requirements based on their interview responses:
+    Conversation: {conversation_history}
+    Job Description: {job_desc}
+
+    Score out of 20 based on:
+    - Role alignment (10 points)
+    - Professional conduct (10 points)
+
+    Return only the numeric score.
+    """
+
+    response = groq_client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model="mixtral-8x7b-32768",
+        temperature=0.1,
+    )
+
+    return float(response.choices[0].message.content.strip())
+
+
+def check_cheating(groq_client, conversation):
+    """Check for potential cheating indicators"""
+    prompt = f"""
+    Analyze this interview conversation for signs of cheating or suspicious behavior:
+    Conversation: {conversation}
+
+    Consider:
+    - Inconsistent knowledge levels
+    - Copy-pasted responses
+    - Unnatural response patterns
+    - Excessive technical precision
+
+    Return 'True' if cheating is suspected, 'False' otherwise.
+    """
+
+    response = groq_client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model="mixtral-8x7b-32768",
+        temperature=0.1,
+    )
+
+    return response.choices[0].message.content.strip().lower() == 'true'
+
