@@ -7,4 +7,5 @@ urlpatterns = [
 
 
     path('', views.public_chat,name='gc'),
+    path('create/',views.createGroup,name='creategroup')
 ]

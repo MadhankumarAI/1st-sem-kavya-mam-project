@@ -7,10 +7,6 @@ import json
 from .utils import *
 from django.contrib import messages
 
-
-
-
-
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)

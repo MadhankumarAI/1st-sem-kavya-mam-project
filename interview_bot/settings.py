@@ -125,7 +125,7 @@ CHANNEL_LAYERS = {
 POSTGRES_LOCALLY = env('POSTGRES_LOCALLY')
 ENVIRONMENT = env('ENVIRONMENT')
 
-if ENVIRONMENT == 'production' or POSTGRES_LOCALLY:
+if ENVIRONMENT == 'development' or POSTGRES_LOCALLY:
     try:
         DATABASES = {
             'default': dj_database_url.parse(env('DATABASE_URL'))
