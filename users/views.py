@@ -46,7 +46,7 @@ class registerapi(APIView):
             return Response({
                 "error" : "username already exsists"
             },status=HTTP_400_BAD_REQUEST)
-            # Create new user
+           
         try:
             user = User.objects.create_user(  # Use create_user instead of create
                 username=serializer.data['username'],
