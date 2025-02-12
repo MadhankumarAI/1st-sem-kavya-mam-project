@@ -1,14 +1,21 @@
+from operator import truediv
+
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_200_OK
 
 from .models import *
 from .forms import *
 from .utils import *
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.http import JsonResponse
 from django.utils import timezone
 import json
 from django.contrib import messages
+
+
 
 def getpostings(request):
     jobs = postings.objects.all().order_by('-id')
@@ -285,35 +292,133 @@ def reset_password(request):
             messages.error(request, 'An error occurred. Please try again.')
 
     return render(request, 'users/reset_password.html')
-
-def create_custom_interview(request):
-    if request.method == 'POST':
-        # Create a form instance with POST data
-        form = CustomInterviews(request.POST)
-        if form.is_valid():
-            # Save the form data to the database
-            form.save()
-            messages.success(request, 'Custom interview created successfully!')
-            return redirect('custom_interview_success')  # Redirect to a success page
-        else:
-            # If the form is invalid, re-render the form with errors
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        # For GET requests, create an empty form
-        form = CustomInterviews()
-
-    # Render the form template
-    return render(request, 'interviews/create_custom_interview.html', {'form': form})
+@login_required()
 def create_posting(request):
+
+    user_org = organization.objects.get(org=request.user)  # Get the user's organization
+
+
     if request.method == 'POST':
         form = postingsForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Job posting created successfully!')
-            return redirect('posting_success')
+            interview = form.save(commit=False)  # Don't save immediately
+            interview.org = user_org  # Assign the organization
+            interview.save()
+            messages.success(request, 'Custom interview created successfully!')
+            return redirect('custom_interview_success')
         else:
-            # If the form is invalid, re-render the form with errors
             messages.error(request, 'Please correct the errors below.')
     else:
         form = postingsForm()
-    return render(request, 'postings/create_posting.html', {'form': form})
+
+    return render(request, 'organization/createjobposting.html', {'form': form})
+def create_custom_interview(request):
+    user_org = organization.objects.get(org=request.user)  # Get the user's organization
+
+    if request.method == 'POST':
+        form = CustomInterviewsform(request.POST)
+        if form.is_valid():
+            interview = form.save(commit=False)  # Don't save immediately
+            interview.org = user_org  # Assign the organization
+            interview.save()
+            messages.success(request, 'Custom interview created successfully!')
+            return redirect('custom_interview_success')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CustomInterviewsform()
+
+    return render(request, 'organization/createcustominterview.html', {'form': form})
+@login_required()
+def Attempted(request):
+    Id = request.data.get('id')
+    if Application.objects.filter(id=Id) is None:
+        return Response({'error' : 'invalid Application id'},status=HTTP_400_BAD_REQUEST)
+    if request.user != Application.objects.filter(id=Id).first().user:
+        return Response({'error' : 'unauthorized'},status=HTTP_401_UNAUTHORIZED)
+    obj = Application.objects.filter(id=Id).first()
+    obj.attempted = True
+    return Response(HTTP_200_OK)
+def Cheated(request):
+    Id = request.data.get('id')
+    if Application.objects.filter(id=Id) is None:
+        return Response({'error' : 'invalid Application id'},status=HTTP_400_BAD_REQUEST)
+    if request.user != Application.objects.filter(id=Id).first().user:
+        return Response({'error' : 'unauthorized'},status=HTTP_401_UNAUTHORIZED)
+    obj = Application.objects.filter(id=Id).first()
+    obj.isCheated = True
+    obj.save()
+    return Response(HTTP_200_OK)
+@login_required(login_url='reg/')
+def Apply(request):
+    Id = request.data.get('id')
+    if Custominterviews.objects.filter(id=Id) is None:
+        return Response({'error': 'invalid Application id'}, status=HTTP_400_BAD_REQUEST)
+    obj = Application.objects.create(user=request.user,interview=Custominterviews.objects.get(id=Id))
+    obj.save()
+    obj1 = Customconversation.objects.create(Application=obj)
+    obj1.save()
+    return redirect('chat',obj1.id)
+
+@login_required
+@csrf_exempt
+def chat(request, convoid):
+    convo = get_object_or_404(Customconversation, id=convoid)
+
+    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
+        data = json.loads(request.body)
+        user_response = data.get('response')
+
+        if user_response:
+            Customquestions.objects.create(convo=convo, question=user_response, user='user')
+            questions_list = list(Customquestions.objects.filter(convo=convo).values_list('question', flat=True))
+
+            ques = ques = convo.Application.interview.questions
+            post_title = convo.Application.interview.post
+            reply, next_question = llm(questions_list, convoid, user_response, post_title,ques)
+
+            if reply:
+                Customquestions.objects.create(convo=convo, question=reply, user='ai')
+            if next_question:
+                Customquestions.objects.create(convo=convo, question=next_question, user='ai')
+
+            if "INTERVIEW_COMPLETE" in next_question:
+                convo.Application.attempted = True
+                convo.Application.completed = True
+                convo.Application.save()
+                messages.success(request,"You have successfully finished the interview")
+                return redirect('home')
+
+            return JsonResponse({
+                "reply": reply,
+                "next_question": next_question,
+            })
+
+        return JsonResponse({"error": "Invalid response"}, status=400)
+
+    # Fetch all questions for this conversation
+    questions_list = Customquestions.objects.filter(convo=convo)
+
+    # Initialize with a default question if no questions exist
+    if not questions_list.exists():
+        first_question = "Welcome to the interview! Can you tell me about your experience in this field?"
+        Customquestions.objects.create(convo=convo, question=first_question, user='ai')
+        questions_list = Customquestions.objects.filter(convo=convo)
+
+    return render(request, 'bot/chat.html', {
+        'convo': convo,
+        'questions': questions_list,
+    })
+    # Fetch all questions for this conversation
+    questions_list = Customquestions.objects.filter(convo=convo)
+
+    # Initialize with a default question if no questions exist
+    if not questions_list.exists():
+        first_question = "Welcome to the interview! Can you tell me about your experience in this field?"
+        questions.objects.create(convo=convo, question=first_question, user='ai')
+        questions_list = questions.objects.filter(convo=convo)
+
+    return render(request, 'bot/chat.html', {
+        'convo': convo,
+        'questions': questions_list,
+    })

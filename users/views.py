@@ -17,14 +17,22 @@ def register(request):
                 'email': form.cleaned_data['email'],
                 'password': form.cleaned_data['password1'],
             }
+            username1 = form.cleaned_data['username']
+            us = User.objects.filter(username=username1)
+            if us is not None:
+                messages.error(request,"Username already exsists")
+                return render(request, 'users/register.html', {'form': form})
+            email = form.cleaned_data['email'],
+            us = User.objects.filter(email=email)
+            if us is not None:
+                messages.error(request,"Username already exsists")
+                return render(request, 'users/register.html', {'form': form})
             request.session['pending_user'] = user_data
 
             # Generate and store verification code in session
             code = generate_verification_code()
             request.session['verification_code'] = code
             request.session['code_generated_at'] = timezone.now().timestamp()
-
-            # Send verification email
             send_verification_email(user_data['email'], code)
 
             return redirect('verify_email')

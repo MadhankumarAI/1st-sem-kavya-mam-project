@@ -22,7 +22,7 @@ class Application(models.Model):
     interview = models.ForeignKey(Custominterviews, on_delete=models.CASCADE)
     attempted = models.BooleanField(default=False)
     isCheated = models.TextField(default=False)
-
+    completed = models.BooleanField(default=False)
 class Customconversation(models.Model):
     Application = models.ForeignKey(Application, on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
@@ -31,9 +31,11 @@ class Customquestions(models.Model):
     user = models.CharField(max_length=100, default="user")
     question = models.TextField(default="Default question text")
     created_at = models.DateTimeField(auto_now_add=True)
-
 class postings(models.Model):
     org = models.ForeignKey(organization, on_delete=models.CASCADE)
     desc = models.TextField()
     post = models.TextField()
     experience = models.CharField(max_length=10)
+class leaderBoard(models.Model):
+    Application = models.ForeignKey(Application, on_delete=models.CASCADE)
+    Score = models.DecimalField(max_digits=10,decimal_places=2)

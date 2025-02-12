@@ -1,13 +1,12 @@
 from django import forms
 from .models import *
 
-class CustomInterviews(forms.ModelForm):
-    
+class CustomInterviewsform(forms.ModelForm):
     class Meta:
         model = Custominterviews
-        fields = ('org','desc','post','questions','experience')
+        fields = ('desc','post','questions','experience')
 class postingsForm(forms.ModelForm):
     class Meta:
         model = postings
-        fields = ('org','desc','post','experience')
+        fields = ('desc','post','experience')
 

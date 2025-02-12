@@ -1,3 +1,6 @@
+import json
+
+from django.http import JsonResponse
 from django.shortcuts import render
 
 from rest_framework.response import Response
@@ -19,17 +22,22 @@ def public_chat(request):
 
 
 def createGroup(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            group_name = data.get('group')
 
-    group_name = request.data.get('group')
+            # Check if 'group' is provided and not empty
+            if not group_name:
+                return JsonResponse({"error": "Group name is required."}, status=400)
 
-    # Check if 'group' is provided and not empty
-    if not group_name:
-        return Response({"error": "Group name is required."}, status=HTTP_400_BAD_REQUEST)
+            if chatGroup.objects.filter(roomName=group_name).exists():
+                return JsonResponse({"error": "A group with this name already exists."}, status=400)
 
-    if chatGroup.objects.filter(roomName=group_name).exists():
-        return Response({"error": "A group with this name already exists."}, status=HTTP_400_BAD_REQUEST)
+            obj = chatGroup.objects.create(roomName=group_name)
+            return JsonResponse({"message": "Group created successfully.", "group_id": obj.id}, status=201)
 
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data."}, status=400)
 
-    obj = chatGroup.objects.create(roomName=group_name)
-
-    return Response({"message": "Group created successfully.", "group_id": obj.id}, status=HTTP_201_CREATED)
+    return JsonResponse({"error": "Only POST method is allowed."}, status=405)

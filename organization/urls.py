@@ -18,4 +18,5 @@ urlpatterns = [
     path('resend-reset-code/', views.resend_reset_code, name='compresend_reset_code'),
     path('createposting/',views.create_posting,name='createposting'),
     path('createinterview/',views.create_custom_interview,name='createcustominterview'),
+    path('attempted/',views.Attempted,name='attempted'),
     ]

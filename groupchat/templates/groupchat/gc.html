@@ -183,6 +183,33 @@
             color: var(--primary-color);
             cursor: pointer;
         }
+        .room-creation {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#new-group-name {
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 100%;
+}
+
+#create-group-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#create-group-btn:hover {
+    background-color: var(--primary-hover);
+}
     </style>
 </head>
 <body>
@@ -214,13 +241,17 @@
 
 <div id="main-container">
     <div id="rooms-sidebar">
-        <h4>Chat Rooms</h4>
-        {% for room in rooms %}
-        <div class="room-item" data-room="{{ room.roomName }}" data-room-id="{{ room.id }}">
-            {{ room.roomName }}
-        </div>
-        {% endfor %}
+    <h4>Chat Rooms</h4>
+    <div class="room-creation">
+        <input type="text" id="new-group-name" class="form-control mb-2" placeholder="Enter group name">
+        <button id="create-group-btn" class="btn btn-primary w-100">Create Group</button>
     </div>
+    {% for room in rooms %}
+    <div class="room-item" data-room="{{ room.roomName }}" data-room-id="{{ room.id }}">
+        {{ room.roomName }}
+    </div>
+    {% endfor %}
+</div>
 
     <div id="chat-container">
         {% for room in rooms %}
@@ -368,6 +399,55 @@
         firstRoomElement.classList.add('active');
         chatRooms[firstRoomId].activate();
     }
+    // Group creation functionality
+document.getElementById('create-group-btn').addEventListener('click', async () => {
+    const groupName = document.getElementById('new-group-name').value.trim();
+
+    if (!groupName) {
+        alert('Please enter a group name');
+        return;
+    }
+
+    try {
+        const response = await fetch('{% url 'create_group' %}', {  // Adjust this endpoint to match your actual API endpoint
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  // Django CSRF token
+            },
+            body: JSON.stringify({
+                group: groupName
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Refresh the page after successful creation
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to create group');
+        }
+    } catch (error) {
+        console.error('Error creating group:', error);
+        alert('Failed to create group. Please try again.');
+    }
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 </script>
 
 </body>
