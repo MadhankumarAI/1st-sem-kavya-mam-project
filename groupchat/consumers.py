@@ -29,7 +29,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         @sync_to_async
         def get_chat():
-            return chatGroup.objects.filter(roomName=chatroom).first()
+            return chatGroup.objects.filter(id=chatroom).first()
 
         @sync_to_async
         def create_message(user, chat):

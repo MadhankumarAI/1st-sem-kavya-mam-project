@@ -28,6 +28,8 @@ path('', include('social_django.urls', namespace='social')),
     path('gc/',include('groupchat.urls')),
     # path("accounts/", include("allauth.urls")),
     path('interview_simulator/',include('simpleinterview.urls')),
+    path('org/', include('organization.urls')),
+
 ]
 
 # Serve media files during development

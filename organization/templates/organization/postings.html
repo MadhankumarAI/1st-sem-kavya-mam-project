@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Listings - Bengaluru, Karnataka</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            font-size: 24px;
+            color: #333333;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+        }
+        .search-bar input {
+            padding: 8px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+        }
+        .search-bar button {
+            padding: 8px 16px;
+            background-color: #0073b1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-bar button:hover {
+            background-color: #005f8d;
+        }
+        .job-listings {
+            padding: 20px;
+        }
+        .job-card {
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .job-card h2 {
+            font-size: 18px;
+            margin: 0 0 8px;
+            color: #333333;
+        }
+        .job-card p {
+            margin: 4px 0;
+            color: #666666;
+        }
+        .job-card .company {
+            font-weight: bold;
+        }
+        .job-card .location {
+            color: #0073b1;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #f2f2f2;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Job Listings</h1>
+        <div class="search-bar">
+            <input type="text" placeholder="Job title, keywords, or company">
+            <input type="text" placeholder="City, state, or zip code">
+            <button>Search</button>
+        </div>
+    </header>
+    <div class="job-listings">
+{% if jobs %}
+       {% for j in jobs %}
+        <div class="job-card">
+            <h2>j.post</h2>
+            <p class="company">{{j.org.orgname}}</p>
+            <p class="location">{{j.org.address}}</p>
+            <p>Experience : {{j.org.address}}</p>
+            <p>{{ j.org.desc }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    <footer>
+        <p>&copy; 2023 Job Portal. All rights reserved.</p>
+    </footer>
+    <script>
+        // Simple JavaScript to handle search functionality
+        document.querySelector('.search-bar button').addEventListener('click', function () {
+            const jobTitle = document.querySelectorAll('.search-bar input')[0].value;
+            const location = document.querySelectorAll('.search-bar input')[1].value;
+            alert(Searching for "${jobTitle}" in "${location}");
+        });
+    </script>
+</body>
+</html>
