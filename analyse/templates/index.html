@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="file"],
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            white-space: pre-wrap; /* Preserve formatting for plain text */
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Resume for Analysis</h1>
+    <form id="resume-form">
+        <label for="resume">Upload Resume (PDF)</label>
+        <input type="file" id="resume" name="resume" accept=".pdf" required>
+
+        <label for="job-role">Job Role</label>
+        <input type="text" id="job-role" name="job_role" placeholder="e.g., Software Engineer" required>
+
+        <label for="company">Company</label>
+        <input type="text" id="company" name="company" placeholder="e.g., Google" required>
+
+        <button type="submit">Analyze Resume</button>
+    </form>
+
+    <div id="result" class="result" style="display: none;"></div>
+    <p id="error-message" class="error" style="display: none;"></p>
+
+    <script>
+        document.getElementById("resume-form").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            const resumeFile = document.getElementById("resume").files[0];
+            const jobRole = document.getElementById("job-role").value;
+            const company = document.getElementById("company").value;
+
+            formData.append("resume", resumeFile);
+            formData.append("job_role", jobRole);
+            formData.append("company", company);
+
+            const resultDiv = document.getElementById("result");
+            const errorDiv = document.getElementById("error-message");
+
+            resultDiv.style.display = "none";
+            errorDiv.style.display = "none";
+
+            try {
+                const response = await fetch("/ats/analyze_resume/", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        resultDiv.style.display = "block";
+                        resultDiv.textContent = data.data; // Display the raw Groq response text
+                    } else {
+                        errorDiv.style.display = "block";
+                        errorDiv.textContent = data.error || "An error occurred.";
+                    }
+                } else {
+                    errorDiv.style.display = "block";
+                    errorDiv.textContent = `Server error. Status code: ${response.status}`;
+                }
+            } catch (error) {
+                errorDiv.style.display = "block";
+                errorDiv.textContent = "An unexpected error occurred.";
+            }
+        });
+    </script>
+</body>
+</html>

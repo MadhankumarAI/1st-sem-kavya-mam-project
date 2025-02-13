@@ -67,6 +67,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'organization',
+    'analyse',
+    'roadmaps',
 ]
 
 AUTHENTICATION_BACKENDS = (

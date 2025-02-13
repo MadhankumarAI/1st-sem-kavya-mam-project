@@ -29,6 +29,8 @@ path('', include('social_django.urls', namespace='social')),
     # path("accounts/", include("allauth.urls")),
     path('interview_simulator/',include('simpleinterview.urls')),
     path('org/', include('organization.urls')),
+    path('ats/',include('analyse.urls')),
+    path('roadmaps/',include('roadmaps.urls')),
 
 ]
 
