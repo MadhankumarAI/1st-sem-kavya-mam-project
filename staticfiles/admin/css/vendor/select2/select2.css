@@ -479,3 +479,30 @@
 
 .select2-container--classic.select2-container--open .select2-dropdown {
   border-color: #5897fb; }
+/* Mobile responsiveness */
+@media (max-width: 767px) {
+  .select2-container {
+    width: 100% !important; /* Full width on mobile screens */
+  }
+
+  .select2-selection--single {
+    height: 40px; /* Increase height for better touch interaction */
+    font-size: 16px; /* Larger text for better readability */
+  }
+
+  .select2-container .select2-selection__rendered {
+    padding-left: 12px;
+    padding-right: 24px;
+    font-size: 16px; /* Larger font for smaller screens */
+  }
+
+  .select2-dropdown {
+    width: 100% !important; /* Ensure the dropdown spans the full width */
+  }
+
+  /* Mobile: Increase padding inside search field */
+  .select2-search--inline .select2-search__field {
+    font-size: 16px;
+    padding: 10px;
+  }
+}
