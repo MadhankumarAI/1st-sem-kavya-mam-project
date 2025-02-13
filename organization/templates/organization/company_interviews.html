@@ -3,50 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Interviews</title>
+    <title>Company Interviews</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            color: #212529;
-            min-height: 100vh;
-            position: relative;
-            padding-bottom: 60px;
-        }
-        .navbar {
-            background-color: #007bff;
-        }
-        .navbar-brand, .nav-link {
-            color: white !important;
-        }
-        .card {
-            background-color: white;
-            border: 1px solid #007bff;
-            border-radius: 10px;
-        }
-        .footer {
-            background-color: #007bff;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="#">Interview Portal</a>
-        </div>
-    </nav>
-
+<body class="bg-light">
     <div class="container mt-4">
-        <h2 class="text-primary">Available Interviews</h2>
+        <h2 class="mb-4">Interviews Posted by {{ organization.orgname }}</h2>
 
         {% if messages %}
-        <div class="messages">
+        <div class="messages mb-4">
             {% for message in messages %}
             <div class="alert alert-{{ message.tags }}">
                 {{ message }}
@@ -58,44 +23,29 @@
         <div class="row">
             {% for interview in interviews %}
             <div class="col-md-6 mb-4">
-                <div class="card p-3 shadow-sm">
+                <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title text-primary">{{ interview.post }} at {{ interview.org.orgname }}</h5>
+                        <h5 class="card-title">{{ interview.post }}</h5>
                         <p class="card-text">{{ interview.desc|truncatewords:30 }}</p>
-                        <p><strong>Experience Required:</strong> {{ interview.experience }}</p>
-                        <p><strong>Deadline:</strong> {{ interview.submissionDeadline|date:"F d, Y H:i" }}</p>
-
-                        {% if interview.id in application_status %}
-                            <div class="alert alert-info">
-                                <p class="mb-2">Application Status:</p>
-                                <ul class="list-unstyled mb-0">
-                                    <li>Resume: {% if application_status.resume_status %}Uploaded{% else %}Not Uploaded{% endif %}</li>
-                                    <li>Status: {% if application_status.is_approved %}Approved{% else %}Pending Review{% endif %}</li>
-                                </ul>
-                            </div>
-                        {% else %}
-                            <form method="post" action="{% url 'apply_interview' interview.id %}" enctype="multipart/form-data">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="resume" class="form-label">Upload Resume (PDF, DOC, DOCX)</label>
-                                    <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Apply</button>
-                            </form>
-                        {% endif %}
+                        <ul class="list-unstyled">
+                            <li><strong>Experience Required:</strong> {{ interview.experience }}</li>
+                            <li><strong>Deadline:</strong> {{ interview.submissionDeadline|date:"F d, Y H:i" }}</li>
+                            <li><strong>Applications Received:</strong> {{ interview.application_count }}</li>
+                        </ul>
+                        <a href="{% url 'company_applications' interview.id %}" class="btn btn-primary">
+                            View Applications
+                        </a>
                     </div>
                 </div>
             </div>
             {% empty %}
             <div class="col-12">
-                <p>No available interviews at the moment.</p>
+                <div class="alert alert-info">
+                    No interviews posted yet.
+                </div>
             </div>
             {% endfor %}
         </div>
     </div>
-
-    <footer class="footer">
-        <p class="mb-0">&copy; 2025 Interview Portal. All Rights Reserved.</p>
-    </footer>
 </body>
 </html>
