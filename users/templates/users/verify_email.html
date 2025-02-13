@@ -6,61 +6,130 @@
     <title>Email Verification</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
     <style>
-        body {
-            margin: 0;
-            font-family: 'Poppins', sans-serif;
-            overflow: hidden;
-            background-color: #f8f9fa;
-        }
-        .spline-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            z-index: -1;
-        }
-        .card {
-            z-index: 1;
-            margin-top: 50px;
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            background: rgba(255, 255, 255, 0.9);
-        }
-        .form-control {
-            border-radius: 30px;
-            height: 45px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-        .btn {
-            border-radius: 30px;
-            height: 45px;
-            font-size: 16px;
-            transition: all 0.3s ease-in-out;
-        }
-        .btn-primary {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            border: none;
-        }
-        .btn-secondary {
-            background: linear-gradient(90deg, #6c757d, #495057);
-            border: none;
-        }
-        .timer {
-            font-size: 14px;
-            color: #6c757d;
-            margin-top: 10px;
-        }
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-        #resendButton {
-            display: none;
-        }
+       body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    background-color: #f8f9fa;
+}
+
+/* Spline Container */
+.spline-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: -1;
+}
+
+/* Card Styling */
+.card {
+    z-index: 1;
+    margin-top: 50px;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Form Control */
+.form-control {
+    border-radius: 30px;
+    height: 45px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+/* Button Styling */
+.btn {
+    border-radius: 30px;
+    height: 45px;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+    width: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    border: none;
+}
+
+.btn-secondary {
+    background: linear-gradient(90deg, #6c757d, #495057);
+    border: none;
+}
+
+/* Timer Styling */
+.timer {
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 10px;
+}
+
+/* Error Message */
+.error-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+}
+
+/* Resend Button */
+#resendButton {
+    display: none;
+}
+
+/* Media Queries for Responsiveness */
+
+/* For tablets and smaller screens */
+@media (max-width: 768px) {
+    .card {
+        margin-top: 30px;
+        padding: 15px;
+    }
+
+    .form-control {
+        font-size: 14px;
+        padding: 8px 15px;
+    }
+
+    .btn {
+        font-size: 14px;
+        height: 40px;
+    }
+
+    .timer {
+        font-size: 12px;
+    }
+}
+
+/* For small mobile screens */
+@media (max-width: 480px) {
+    .card {
+        margin-top: 20px;
+        padding: 10px;
+    }
+
+    .form-control {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    .btn {
+        font-size: 12px;
+        height: 38px;
+    }
+
+    .timer {
+        font-size: 10px;
+    }
+}
+
     </style>
 </head>
 <body>
