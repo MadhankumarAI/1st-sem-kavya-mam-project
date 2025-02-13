@@ -33,6 +33,7 @@ body {
 .container {
     display: flex;
     min-height: 100vh;
+    flex-wrap: wrap;
 }
 
 /* Sidebar Styles */
@@ -41,6 +42,7 @@ body {
     background-color: var(--primary-color);
     color: white;
     padding: 20px;
+    flex-shrink: 0;
 }
 
 .logo {
@@ -270,6 +272,98 @@ nav li:hover, nav li.active {
     text-decoration: none;
     font-size: 14px;
 }
+
+/* Media Queries for Responsiveness */
+
+/* For tablets and small screens */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column; /* Stack layout for smaller screens */
+    }
+
+    .sidebar {
+        width: 100%; /* Sidebar takes full width on smaller screens */
+        padding: 10px;
+    }
+
+    .main-content {
+        padding: 15px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr); /* Display 3 items per row on tablets */
+    }
+
+    .three-column-grid {
+        grid-template-columns: repeat(2, 1fr); /* Two items per row */
+    }
+
+    .search-bar input {
+        width: 250px; /* Smaller input box */
+    }
+
+    .payment-item, .task-item {
+        flex-direction: column; /* Stack payment/task items vertically */
+    }
+}
+
+/* For mobile screens */
+@media (max-width: 768px) {
+    .logo img {
+        width: 30px; /* Smaller logo image on mobile */
+        height: 30px;
+    }
+
+    .sidebar {
+        width: 100%; /* Sidebar becomes full width */
+        padding: 15px;
+    }
+
+    .main-content {
+        padding: 10px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr); /* Display 2 items per row */
+    }
+
+    .three-column-grid {
+        grid-template-columns: 1fr; /* Single column layout */
+    }
+
+    .search-bar input {
+        width: 200px; /* Adjust search bar width */
+    }
+
+    .payment-item, .task-item {
+        flex-direction: column; /* Stack items vertically */
+    }
+}
+
+/* For very small screens (mobile landscape or smaller) */
+@media (max-width: 480px) {
+    .logo img {
+        width: 25px; /* Further reduce logo size */
+        height: 25px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr; /* Display 1 item per row */
+    }
+
+    .three-column-grid {
+        grid-template-columns: 1fr; /* Single column layout */
+    }
+
+    .search-bar input {
+        width: 150px; /* Adjust input width for small screens */
+    }
+
+    .next-badge-btn {
+        padding: 6px 12px; /* Smaller button */
+    }
+}
+
 </style>
 <body>
     <div class="container">
