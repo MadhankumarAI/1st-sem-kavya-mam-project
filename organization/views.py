@@ -361,19 +361,18 @@ def Cheated(request):
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-@login_required(login_url='reg/')
-def Apply(request):
-    Id = request.data.get('id')
-    if Custominterviews.objects.filter(id=Id) is None:
-        return Response({'error': 'invalid Application id'}, status=HTTP_400_BAD_REQUEST)
-    obj = Application.objects.create(user=request.user,interview=Custominterviews.objects.get(id=Id))
-    obj.save()
-    return
+
 @login_required
 def compchatcreate(request, applicationid):
     if Application.objects.get(id=applicationid) is None:
         messages.error(request,"Application Not found")
         return redirect('home')
+    if not Application.objects.get(id=applicationid).approved :
+        messages.error(request, "You are not approved")
+        return redirect('home')
+    cd = Application.objects.get(id=applicationid)
+    cd.attempted = True
+    cd.save()
     convo = Customconversation.objects.create(Application=Application.objects.get(id=applicationid))
     return redirect('compchat', convoid=convo.id)
 @login_required
@@ -448,18 +447,17 @@ def compchat(request, convoid):
 def evaluate_interview(request, application_id):
     groq_client = groq.Groq(api_key="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")
     application = get_object_or_404(Application, id=application_id)
-
-    # Check if interview is already evaluated
+    application.completed = True
     if leaderBoard.objects.filter(Application=application).exists():
         messages.warning(request, 'This interview has already been evaluated.')
         return redirect('home')  # Replace 'home' with your home URL name
-    if application.isCheated:
-        messages.warning(request, 'This interview has recorded malpractice.')
-        return redirect('home')
+    # if application.isCheated:
+    #     messages.warning(request, 'This interview has recorded malpractice.')
+    #     return redirect('home')
     if not application.attempted:
         messages.warning(request, 'This interview has not been attempted.')
         return redirect('home')
-    conversation = get_object_or_404(Customconversation, Application=application)
+    conversation = Customconversation.objects.filter(Application=application).first()
     interview = application.interview
     qa_pairs = Customquestions.objects.filter(convo=conversation).order_by('created_at')
 
@@ -490,7 +488,7 @@ def evaluate_interview(request, application_id):
                 f"Job Post: {interview.post}\nExperience Required: {interview.experience}\nDescription: {interview.desc}"
             )
             technical_scores.append(technical_score)
-
+        print(12345)
         # Evaluate corporate fit
         corporate_fit_score = evaluate_corporate_fit(
             groq_client,
@@ -516,10 +514,11 @@ def evaluate_interview(request, application_id):
             Application=application,
             Score=round(final_score, 2)
         )
-
+        print("sucesss")
         messages.success(request, 'Interview evaluation completed successfully.')
 
     except Exception as e:
+        print({str(e)})
         messages.error(request, f'Error during evaluation: {str(e)}')
         application.attempted = True
         application.completed = False
@@ -569,18 +568,29 @@ def available_interviews(request):
     # Create a dictionary with application status
     application_status = {}
     for application in user_applications:
+        interview = application.interview
+        can_start_interview = (
+                application.approved and
+                not application.attempted and
+                interview.startTime <= current_time <= interview.endTime
+        )
+
         application_status[application.interview_id] = {
             'resume_status': bool(application.resume),
             'is_approved': application.approved,
-            'application_id': application.id
+            'application_id': application.id,
+            'can_start_interview': can_start_interview,
+            'interview_start': interview.startTime,
+            'interview_end': interview.endTime,
+            'attempted': application.attempted
         }
 
     context = {
         'interviews': interviews,
         'application_status': application_status,
+        'current_time': current_time,
     }
     return render(request, 'organization/available_interviews.html', context)
-
 
 @login_required
 def apply_interview(request, interview_id):

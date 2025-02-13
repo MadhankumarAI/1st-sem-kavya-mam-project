@@ -138,71 +138,101 @@ def parse_ai_response(response_text):
 def evaluate_answer_quality(groq_client, question, answer, criteria):
     """Evaluate individual answer quality using Groq"""
     prompt = f"""
-    Evaluate this interview answer based on the following:
+    You are an automated interview evaluation system. Your task is to evaluate this interview answer and provide ONLY a numeric score between 0 and 20.
+
     Question: {question}
     Answer: {answer}
     Job Requirements: {criteria}
 
-    Provide a score out of 20 based on:
+    Scoring criteria:
     - Relevance and completeness (8 points)
     - Technical accuracy (6 points)
     - Communication clarity (6 points)
 
-    Return only the numeric score.
+    Important: You must respond with ONLY a number between 0 and 20. Do not provide any explanation or additional text.
+    Example correct response: 15.5
     """
 
-    response = groq_client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="mixtral-8x7b-32768",
-        temperature=0.1,
-    )
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="mixtral-8x7b-32768",
+            temperature=0.1,
+        )
 
-    return float(response.choices[0].message.content.strip())
+        # Clean the response - remove whitespace and any non-numeric characters
+        score_text = response.choices[0].message.content.strip()
+        # Extract just the first number found
+        import re
+        numbers = re.findall(r'\d*\.?\d+', score_text)
+        if not numbers:
+            return 0.0  # Fallback score if no number found
+        score = float(numbers[0])
+        # Ensure score is within valid range
+        return min(max(score, 0.0), 20.0)
+    except Exception as e:
+        print(f"Error in evaluate_answer_quality: {str(e)}")
+        return 0.0  # Fallback score
 
 
 def evaluate_corporate_fit(groq_client, conversation_history, job_desc):
     """Evaluate overall corporate fit using Groq"""
     prompt = f"""
-    Evaluate this candidate's alignment with job requirements based on their interview responses:
-    Conversation: {conversation_history}
+    You are an automated interview evaluation system. Your task is to evaluate the candidate's corporate fit and provide ONLY a numeric score between 0 and 20.
+
+    Conversation History: {conversation_history}
     Job Description: {job_desc}
 
-    Score out of 20 based on:
+    Scoring criteria:
     - Role alignment (10 points)
     - Professional conduct (10 points)
 
-    Return only the numeric score.
+    Important: You must respond with ONLY a number between 0 and 20. Do not provide any explanation or additional text.
+    Example correct response: 15.5
     """
 
-    response = groq_client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="mixtral-8x7b-32768",
-        temperature=0.1,
-    )
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="mixtral-8x7b-32768",
+            temperature=0.1,
+        )
 
-    return float(response.choices[0].message.content.strip())
+        # Clean the response - remove whitespace and any non-numeric characters
+        score_text = response.choices[0].message.content.strip()
+        # Extract just the first number found
+        import re
+        numbers = re.findall(r'\d*\.?\d+', score_text)
+        if not numbers:
+            return 0.0  # Fallback score
+        score = float(numbers[0])
+        # Ensure score is within valid range
+        return min(max(score, 0.0), 20.0)
+    except Exception as e:
+        print(f"Error in evaluate_corporate_fit: {str(e)}")
+        return 0.0  # Fallback score
 
 
-def check_cheating(groq_client, conversation):
-    """Check for potential cheating indicators"""
+def check_cheating(groq_client, conversation_history):
+    """Check for potential cheating behavior"""
     prompt = f"""
-    Analyze this interview conversation for signs of cheating or suspicious behavior:
-    Conversation: {conversation}
+    You are an automated interview monitoring system. Analyze the following interview conversation for signs of cheating or suspicious behavior.
 
-    Consider:
-    - Inconsistent knowledge levels
-    - Copy-pasted responses
-    - Unnatural response patterns
-    - Excessive technical precision
+    Conversation: {conversation_history}
 
-    Return 'True' if cheating is suspected, 'False' otherwise.
+    Respond with ONLY 'True' if you detect clear signs of cheating, or 'False' if the conversation appears legitimate.
+    Do not provide any explanation or additional text.
     """
 
-    response = groq_client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="mixtral-8x7b-32768",
-        temperature=0.1,
-    )
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="mixtral-8x7b-32768",
+            temperature=0.1,
+        )
 
-    return response.choices[0].message.content.strip().lower() == 'true'
-
+        result = response.choices[0].message.content.strip().lower()
+        return result == 'true'
+    except Exception as e:
+        print(f"Error in check_cheating: {str(e)}")
+        return False

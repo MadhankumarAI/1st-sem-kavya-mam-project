@@ -1,3 +1,4 @@
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,15 +66,50 @@
                         <p><strong>Experience Required:</strong> {{ interview.experience }}</p>
                         <p><strong>Deadline:</strong> {{ interview.submissionDeadline|date:"F d, Y H:i" }}</p>
 
-                        {% if interview.id in application_status %}
-                            <div class="alert alert-info">
-                                <p class="mb-2">Application Status:</p>
-                                <ul class="list-unstyled mb-0">
-                                    <li>Resume: {% if application_status.resume_status %}Uploaded{% else %}Uploaded{% endif %}</li>
-                                    <li>Status: {% if application_status.is_approved %}Approved{% else %}Pending Review{% endif %}</li>
-                                </ul>
-                            </div>
-                        {% else %}
+                        {% for app_id, status in application_status.items %}
+                            {% if app_id == interview.id %}
+                                <div class="alert {% if status.is_approved %}alert-success{% else %}alert-info{% endif %}">
+                                    <p class="mb-2">Application Status:</p>
+                                    <ul class="list-unstyled mb-0">
+                                        <li>Resume: Uploaded</li>
+                                        <li>Status:
+                                            {% if status.is_approved %}
+                                                Approved
+                                            {% else %}
+                                                Pending Review
+                                            {% endif %}
+                                        </li>
+                                        {% if status.is_approved %}
+                                            <li>Interview Time:
+                                                {{ status.interview_start|date:"F d, Y H:i" }} -
+                                                {{ status.interview_end|date:"F d, Y H:i" }}
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+
+                                {% if status.is_approved %}
+                                    {% if status.attempted %}
+                                        <div class="alert alert-info">
+                                            Already Attempted
+                                        </div>
+                                    {% elif status.can_start_interview %}
+                                        <a href="{% url 'compchatcreate' status.application_id %}"
+                                           class="btn btn-success">Start Interview</a>
+                                    {% else %}
+                                        {% if current_time < status.interview_start %}
+                                            <div class="alert alert-warning">
+                                                Interview will be available at {{ status.interview_start|date:"F d, Y H:i" }}
+                                            </div>
+                                        {% elif current_time > status.interview_end %}
+                                            <div class="alert alert-danger">
+                                                Interview time has expired
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% empty %}
                             <form method="post" action="{% url 'apply_interview' interview.id %}" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <div class="mb-3">
@@ -82,7 +118,7 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary">Apply</button>
                             </form>
-                        {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
             </div>
