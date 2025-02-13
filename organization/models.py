@@ -7,7 +7,7 @@ class organization(models.Model):
     org = models.ForeignKey(User, on_delete=models.CASCADE)
     orgname = models.CharField(max_length=100)
     address = models.TextField()
-    Photo = models.ImageField(upload_to='./media')
+    Photo = models.ImageField(upload_to='./orgs',null=True,blank=True)
     Description = models.TextField()
     def __str__(self):
         return self.orgname
@@ -16,6 +16,7 @@ class Custominterviews(models.Model):
     desc = models.TextField()
     post = models.TextField()
     experience = models.CharField(max_length=10)
+    submissionDeadline = models.DateTimeField()
     questions = models.TextField()
     startTime = models.DateTimeField()
     endTime = models.DateTimeField()
@@ -24,6 +25,8 @@ class Custominterviews(models.Model):
 class Application(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     interview = models.ForeignKey(Custominterviews, on_delete=models.CASCADE)
+    approved = models.BooleanField(default=False)
+    resume = models.FileField(upload_to='./resume',blank=True,null=True)
     attempted = models.BooleanField(default=False)
     isCheated = models.BooleanField(default=False)
     completed = models.BooleanField(default=False)
@@ -32,6 +35,7 @@ class Application(models.Model):
 class Customconversation(models.Model):
     Application = models.ForeignKey(Application, on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
+    confidence = models.IntegerField(blank=True,null=True)
     def __str__(self):
         return f'{self.Application.user.username}-{self.Application.interview.org.orgname}'
 class Customquestions(models.Model):

@@ -1,0 +1,371 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<!-- Previous head content remains same -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat & Interview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <script src="https://docs.opencv.org/4.5.4/opencv.js"></script>
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #F8F9FA;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .main-container {
+            width: 95%;
+            max-width: 1400px;
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .video-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 350px;
+            background-color: #007BFF;
+            border-radius: 12px;
+        }
+
+        .spline-viewer-container {
+            flex: 1;
+            height: 300px;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 45%;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 700px;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: 500;
+        }
+
+        .chat-messages {
+            padding: 20px;
+            max-height: 550px;
+            overflow-y: auto;
+            flex: 1;
+            background-color: #F8F9FA;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user .content {
+            background-color: #007BFF;
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+            align-self: flex-end;
+        }
+
+        .message.ai .content {
+            background-color: #0056b3;
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+            align-self: flex-start;
+        }
+
+        .chat-footer {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            background-color: white;
+        }
+
+        #response-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 24px;
+            border: 1px solid #007BFF;
+            outline: none;
+        }
+
+        .send-button {
+            padding: 12px 18px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+        }
+        /* Previous styles remain same */
+
+        /* Add styles for malpractice warning */
+        .malpractice-warning {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #dc3545;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .warning-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            display: none;
+        }
+        end-interview-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 8px 16px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .end-interview-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="video-container">
+        <video id="videoElement" autoplay playsinline></video>
+        <div class="spline-viewer-container">
+            <spline-viewer url="https://prod.spline.design/oYiuUSnOHJTzdcPg/scene.splinecode"></spline-viewer>
+        </div>
+    </div>
+    <div class="chat-container">
+        <div class="chat-header">
+            AI Chat
+            <button class="end-interview-button" id="endInterviewButton">End Interview</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            {% for question in questions %}
+            <div class="message {{ question.user }}">
+                <div class="content">{{ question.question }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="chat-footer">
+            <input id="response-input" type="text" placeholder="Type your response...">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+            <button class="send-button" id="send-button">Send</button>
+        </div>
+    </div>
+</div>
+<div class="malpractice-warning" id="malpracticeWarning">
+    ⚠ Warning: Tab switching detected! This will be recorded as potential malpractice.
+</div>
+
+<script>
+class ChatInterface {
+    constructor(applicationId) {
+        this.applicationId = applicationId;
+        this.chatMessages = document.getElementById('chat-messages');
+        this.responseInput = document.getElementById('response-input');
+        this.sendButton = document.getElementById('send-button');
+        this.endInterviewButton = document.getElementById('endInterviewButton');
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        this.responseInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.sendMessage();
+            }
+        });
+        this.endInterviewButton.addEventListener('click', () => this.endInterview());
+    }
+
+    async endInterview() {
+        try {
+window.location.href = `/org/evaluate-${this.applicationId}/`;        } catch (error) {
+            console.error('Error ending interview:', error);
+        }
+    }
+
+    async sendMessage() {
+        const messageText = this.responseInput.value.trim();
+        if (!messageText) return;
+
+        this.addMessageToChat('user', messageText);
+        this.responseInput.value = '';
+
+        try {
+            const response = await fetch(`{% url 'compchat' convoid=convo.id %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    response: messageText,
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.reply) {
+                this.addMessageToChat('ai', data.reply);
+            }
+
+            if (data.next_question) {
+                if (data.next_question.includes("INTERVIEW_COMPLETE")) {
+                    window.location.href = '/';
+                } else {
+                    this.addMessageToChat('ai', data.next_question);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            this.addMessageToChat('ai', 'Sorry, there was an error processing your message.');
+        }
+    }
+
+    addMessageToChat(type, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        messageDiv.innerHTML = `<div class="content">${content}</div>`;
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+
+    getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+}
+
+class MalpracticeDetector {
+    constructor(applicationId) {
+        this.applicationId = applicationId;
+        this.violations = [];
+        this.tabSwitchCount = 0;
+        this.startTime = Date.now();
+        this.initializeDetection();
+    }
+
+    initializeDetection() {
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.recordViolation('Tab switched');
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            this.recordViolation('Window lost focus');
+        });
+
+        window.addEventListener('beforeunload', (e) => {
+            this.recordViolation('Page reload attempted');
+            e.preventDefault();
+            e.returnValue = '';
+        });
+    }
+
+    async recordViolation(type) {
+        const violation = {
+            type,
+            timestamp: new Date().toISOString(),
+            tabSwitchCount: ++this.tabSwitchCount
+        };
+
+        this.violations.push(violation);
+        this.showWarning();
+
+        try {
+            await fetch(`{% url 'cheated' %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    id: this.applicationId
+                })
+            });
+        } catch (error) {
+            console.error('Error recording violation:', error);
+        }
+    }
+
+    showWarning() {
+        const warning = document.getElementById('malpracticeWarning');
+        warning.style.display = 'block';
+        setTimeout(() => {
+            warning.style.display = 'none';
+        }, 3000);
+    }
+
+    getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const applicationId = '{{ applicationId }}';
+    new ChatInterface(applicationId);
+    new MalpracticeDetector(applicationId);
+});
+    document.addEventListener("DOMContentLoaded", function () {
+        var isCheated = {{ is_cheated|lower }}; // Convert Python boolean to JavaScript boolean
+
+        if (isCheated) {
+            alert("Access denied. Cheating detected!");
+            window.location.href = "{% url 'home' %}"; // Redirect to a blocked page
+        }
+    });
+</script>
+</body>
+</html>

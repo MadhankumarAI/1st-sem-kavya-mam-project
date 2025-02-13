@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_200_OK
-
 from .models import *
 from .forms import *
 from .utils import *
@@ -20,7 +19,6 @@ from django.contrib import messages
 
 def getpostings(request):
     jobs = postings.objects.all().order_by('-id')
-    # Pass 'jobs' instead of 'jo' to be more descriptive
     return render(request, 'organization/postings.html', {'jobs': jobs})
 def register(request):
     if request.method == 'POST':
@@ -330,26 +328,39 @@ def create_custom_interview(request):
         form = CustomInterviewsform()
 
     return render(request, 'organization/createcustominterview.html', {'form': form})
-@login_required()
-def Attempted(request):
-    Id = request.data.get('id')
-    if Application.objects.filter(id=Id) is None:
-        return Response({'error' : 'invalid Application id'},status=HTTP_400_BAD_REQUEST)
-    if request.user != Application.objects.filter(id=Id).first().user:
-        return Response({'error' : 'unauthorized'},status=HTTP_401_UNAUTHORIZED)
-    obj = Application.objects.filter(id=Id).first()
-    obj.attempted = True
-    return Response(HTTP_200_OK)
+
+
+@login_required
+@csrf_exempt
 def Cheated(request):
-    Id = request.data.get('id')
-    if Application.objects.filter(id=Id) is None:
-        return Response({'error' : 'invalid Application id'},status=HTTP_400_BAD_REQUEST)
-    if request.user != Application.objects.filter(id=Id).first().user:
-        return Response({'error' : 'unauthorized'},status=HTTP_401_UNAUTHORIZED)
-    obj = Application.objects.filter(id=Id).first()
-    obj.isCheated = True
-    obj.save()
-    return Response(HTTP_200_OK)
+    if request.method == 'POST':
+        try:
+            # Parse JSON data from request.body
+            data = json.loads(request.body)
+            application_id = data.get('id')
+
+            if not application_id:
+                return JsonResponse({'error': 'Application ID is required'}, status=400)
+
+            try:
+                application = Application.objects.get(id=application_id)
+
+                # Check if user is authorized
+                if request.user != application.user:
+                    return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+                application.isCheated = True
+                application.save()
+
+                return JsonResponse({'success': True})
+
+            except Application.DoesNotExist:
+                return JsonResponse({'error': 'Application not found'}, status=404)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 @login_required(login_url='reg/')
 def Apply(request):
     Id = request.data.get('id')
@@ -359,15 +370,15 @@ def Apply(request):
     obj.save()
     return
 @login_required
-def chatcreate(request, applicationid):
-    if Application.objects.get(id=applicationid).first() is None:
+def compchatcreate(request, applicationid):
+    if Application.objects.get(id=applicationid) is None:
         messages.error(request,"Application Not found")
         return redirect('home')
-    convo = Customconversation.objects.create(Application=Application.objects.get(id=applicationid).first())
+    convo = Customconversation.objects.create(Application=Application.objects.get(id=applicationid))
     return redirect('compchat', convoid=convo.id)
 @login_required
 @csrf_exempt
-def chat(request, convoid):
+def compchat(request, convoid):
     convo = get_object_or_404(Customconversation, id=convoid)
 
     if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
@@ -408,10 +419,13 @@ def chat(request, convoid):
         first_question = "Welcome to the interview! Can you tell me about your experience in this field?"
         Customquestions.objects.create(convo=convo, question=first_question, user='ai')
         questions_list = Customquestions.objects.filter(convo=convo)
-
-    return render(request, 'bot/chat.html', {
+    is_cheated = convo.Application.isCheated
+    return render(request, 'organization/i.html', {
         'convo': convo,
         'questions': questions_list,
+        'applicationId': convo.Application.id,
+        'is_cheated': is_cheated,
+
     })
     # Fetch all questions for this conversation
     questions_list = Customquestions.objects.filter(convo=convo)
@@ -421,10 +435,12 @@ def chat(request, convoid):
         first_question = "Welcome to the interview! Can you tell me about your experience in this field?"
         questions.objects.create(convo=convo, question=first_question, user='ai')
         questions_list = questions.objects.filter(convo=convo)
-
-    return render(request, 'bot/chat.html', {
+    is_cheated = convo.Application.isCheated
+    return render(request, 'organization/i.html', {
         'convo': convo,
         'questions': questions_list,
+        'applicationId': convo.Application.id,
+        'is_cheated' : is_cheated
     })
 
 
@@ -509,3 +525,311 @@ def evaluate_interview(request, application_id):
         application.completed = False
         application.save()
     return redirect('home')
+
+
+@login_required
+def Attempted(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        application_id = data.get('id')
+
+        try:
+            application = Application.objects.get(id=application_id)
+
+            # Check if user is authorized
+            if request.user != application.user:
+                return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+            return JsonResponse({
+                'isCheated': application.isCheated,
+                'isCompleted': application.completed,
+                'isAttempted': application.attempted
+            })
+
+        except Application.DoesNotExist:
+            return JsonResponse({'error': 'Application not found'}, status=404)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+@login_required
+def available_interviews(request):
+    current_time = timezone.now()
+    # Get all interviews that haven't passed deadline
+    interviews = Custominterviews.objects.filter(
+        submissionDeadline__gt=current_time
+    ).select_related('org')
+
+    # Get user's applications
+    user_applications = Application.objects.filter(
+        user=request.user
+    ).select_related('interview')
+
+    # Create a dictionary with application status
+    application_status = {}
+    for application in user_applications:
+        application_status[application.interview_id] = {
+            'resume_status': bool(application.resume),
+            'is_approved': application.approved,
+            'application_id': application.id
+        }
+
+    context = {
+        'interviews': interviews,
+        'application_status': application_status,
+    }
+    return render(request, 'organization/available_interviews.html', context)
+
+
+@login_required
+def apply_interview(request, interview_id):
+    if request.method == 'POST':
+        try:
+            interview = Custominterviews.objects.get(id=interview_id)
+
+            # Check if deadline has passed
+            if interview.submissionDeadline < timezone.now():
+                messages.error(request, 'Application deadline has passed.')
+                return redirect('available_interviews')
+
+            # Check if already applied
+            if Application.objects.filter(user=request.user, interview_id=interview_id).exists():
+                messages.error(request, 'You have already applied for this interview.')
+                return redirect('available_interviews')
+
+            # Handle resume upload
+            resume = request.FILES.get('resume')
+            if not resume:
+                messages.error(request, 'Please upload your resume.')
+                return redirect('available_interviews')
+
+            # Create application
+            Application.objects.create(
+                user=request.user,
+                interview=interview,
+                resume=resume
+            )
+
+            messages.success(request, 'Successfully applied for the interview.')
+
+        except Custominterviews.DoesNotExist:
+            messages.error(request, 'Interview not found.')
+        except Exception as e:
+            messages.error(request, f'Error applying for interview: {str(e)}')
+
+    return redirect('available_interviews')
+
+
+@login_required
+def company_interviews(request):
+    try:
+        # Get the organization for current user
+        org = organization.objects.get(org=request.user)
+
+        # Get all interviews created by this organization
+        interviews = Custominterviews.objects.filter(
+            org=org
+        ).order_by('-submissionDeadline')
+
+        # Get application counts for each interview
+        for interview in interviews:
+            interview.application_count = Application.objects.filter(
+                interview=interview
+            ).count()
+
+        return render(request, 'organization/company_interviews.html', {
+            'interviews': interviews,
+            'organization': org
+        })
+    except organization.DoesNotExist:
+        messages.error(request, 'Unauthorized access. No organization profile found.')
+        return redirect('home')
+
+
+@login_required
+def company_applications(request, interview_id):
+    try:
+        # Get the organization for current user
+        org = organization.objects.get(org=request.user)
+
+        # Get the specific interview and verify it belongs to this organization
+        interview = get_object_or_404(Custominterviews, id=interview_id, org=org)
+
+        # Get all applications for this interview
+        applications = Application.objects.filter(
+            interview=interview
+        ).select_related('user')
+
+        context = {
+            'interview': interview,
+            'applications': applications,
+            'organization': org
+        }
+
+        return render(request, 'organization/company_applications.html', context)
+    except organization.DoesNotExist:
+        messages.error(request, 'Unauthorized access. No organization profile found.')
+        return redirect('home')
+
+@login_required
+def approve_application(request, application_id):
+    if request.method == 'POST':
+        application = Application.objects.get(id=application_id)
+
+        # Verify the user has permission to approve
+        if request.user != application.interview.org.org:  # Modify based on your authorization logic
+            messages.error(request, 'Unauthorized access.')
+            return redirect('company_interviews')
+
+        application.approved = True
+        application.save()
+
+        messages.success(request, f'Application approved for {application.user.username}')
+        return redirect('company_applications',Application.objects.get(id=application_id).interview.id)
+
+    return redirect('company_applications',Application.objects.get(id=application_id).interview.id)
+#
+# cap = None
+# detector = dlib.get_frontal_face_detector()
+# predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+# confidence_scores = []
+# emotion_scores = {
+#     "happy": 0, "neutral": 0, "surprise": 0,
+#     "sad": 0, "fear": 0, "angry": 0, "disgust": 0
+# }
+# lock = threading.Lock()
+#
+#
+# def detect_face_not_looking(frame):
+#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#     faces = detector(gray)
+#
+#     if len(faces) > 1:
+#         return "multiple_faces"
+#
+#     for face in faces:
+#         landmarks = predictor(gray, face)
+#         image_points = np.array([
+#             (landmarks.part(36).x, landmarks.part(36).y),
+#             (landmarks.part(45).x, landmarks.part(45).y),
+#             (landmarks.part(30).x, landmarks.part(30).y),
+#             (landmarks.part(48).x, landmarks.part(48).y),
+#             (landmarks.part(54).x, landmarks.part(54).y)
+#         ], dtype="double")
+#
+#         centroid_x, centroid_y = np.mean(image_points[:, 0]), np.mean(image_points[:, 1])
+#         frame_center_x, frame_center_y = frame.shape[1] // 2, frame.shape[0] // 2
+#         distance_x, distance_y = abs(centroid_x - frame_center_x), abs(centroid_y - frame_center_y)
+#
+#         threshold_x, threshold_y = 30, 50
+#         return distance_x > threshold_x or distance_y > threshold_y
+#     return False
+#
+#
+# def analyze_emotions():
+#     global cap
+#     confidence_map = {
+#         "happy": 0.9, "neutral": 0.8, "surprise": 0.7,
+#         "sad": 0.5, "fear": 0.4, "angry": 0.3, "disgust": 0.2
+#     }
+#
+#     while True:
+#         if cap and cap.isOpened():
+#             ret, frame = cap.read()
+#             if ret:
+#                 try:
+#                     result = DeepFace.analyze(frame, actions=["emotion"], enforce_detection=False)
+#                     if result:
+#                         dominant_emotion = result[0]['dominant_emotion']
+#                         confidence_score = confidence_map.get(dominant_emotion, 0.5)
+#                         with lock:
+#                             confidence_scores.append(confidence_score)
+#                             if dominant_emotion in emotion_scores:
+#                                 emotion_scores[dominant_emotion] += 1
+#
+#                         # Store in database
+#                         Customconversation.objects.create(
+#                             confidence_score=confidence_score,
+#
+#                         )
+#                 except Exception as e:
+#                     print("Emotion detection error:", e)
+#         time.sleep(2)
+#
+#
+# emotion_thread = threading.Thread(target=analyze_emotions, daemon=True)
+# emotion_thread.start()
+#
+#
+# def gen():
+#     global cap
+#     while cap and cap.isOpened():
+#         ret, frame = cap.read()
+#         if not ret:
+#             break
+#
+#         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#         faces = detector(gray)
+#         warning_message = None
+#
+#         if len(faces) > 1:
+#             warning_message = "Warning: Multiple faces detected!"
+#             for face in faces:
+#                 x, y, w, h = face.left(), face.top(), face.width(), face.height()
+#                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+#         elif detect_face_not_looking(frame):
+#             warning_message = "Warning: Not looking at the camera!"
+#
+#         if warning_message:
+#             cv2.putText(frame, warning_message, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+#
+#         _, jpeg = cv2.imencode('.jpg', frame)
+#         yield (b'--frame\r\n'
+#                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
+#
+#
+# def index(request):
+#     return render(request, 'interview/interview.html')
+#
+#
+# def video_feed(request):
+#     global cap
+#     if cap and cap.isOpened():
+#         return StreamingHttpResponse(gen(), content_type='multipart/x-mixed-replace; boundary=frame')
+#     return HttpResponse("Camera is off. Click 'Start Camera' to begin.")
+#
+#
+# @csrf_exempt
+# def toggle_camera(request):
+#     global cap
+#     if cap is None or not cap.isOpened():
+#         cap = cv2.VideoCapture(0)
+#         return HttpResponse("Camera started" if cap.isOpened() else "Failed to start camera.")
+#     else:
+#         cap.release()
+#         return HttpResponse("Camera stopped")
+#
+#
+# def end_meeting(request):
+#     global cap
+#     if cap and cap.isOpened():
+#         cap.release()
+#
+#     total_score = sum(confidence_scores)
+#     emotion_icons = {
+#         "happy": "😊", "neutral": "😐", "surprise": "😲",
+#         "sad": "😢", "fear": "😨", "angry": "😠", "disgust": "🤢"
+#     }
+#
+#     return render(request, 'interview/meeting_ended.html', {
+#         'confidence_scores': confidence_scores,
+#         'emotion_scores': emotion_scores,
+#         'total_score': total_score,
+#         'emotion_icons': emotion_icons
+#     })
+#
+#
+# def get_confidence_scores(request):
+#     with lock:
+#         return JsonResponse({"confidence_scores": confidence_scores})
