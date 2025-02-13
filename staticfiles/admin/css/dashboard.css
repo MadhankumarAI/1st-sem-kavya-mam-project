@@ -17,7 +17,6 @@
 }
 
 /* RECENT ACTIONS MODULE */
-
 .module ul.actionlist {
     margin-left: 0;
 }
@@ -26,4 +25,107 @@ ul.actionlist li {
     list-style-type: none;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* MOBILE-RESPONSIVE STYLES */
+
+/* For small screens (mobile phones) */
+@media (max-width: 480px) {
+    /* General Body adjustments */
+    body {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* Adjust table styles for smaller screens */
+    .dashboard .module table th, .dashboard .module table td {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 10px 5px;
+    }
+
+    .dashboard .module table td a {
+        padding-right: 0;
+    }
+
+    /* Make the action list items more spaced out */
+    ul.actionlist li {
+        padding: 5px 0;
+    }
+
+    /* Adjust margins/paddings for better mobile use */
+    .module ul.actionlist {
+        padding-left: 15px;
+    }
+}
+
+/* For medium screens (tablets) */
+@media (max-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+
+    /* Adjust tables to fit the screen better */
+    .dashboard .module table th, .dashboard .module table td {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        text-align: left;
+    }
+
+    .dashboard .module table td a {
+        padding-right: .4em;
+    }
+
+    /* Ensure action list items have enough space */
+    ul.actionlist li {
+        font-size: 16px;
+        padding: 10px 0;
+    }
+}
+
+/* For larger screens (desktops and large tablets) */
+@media (min-width: 769px) {
+    body {
+        font-size: 18px;
+    }
+
+    /* Adjust tables for large screens */
+    .dashboard .module table th, .dashboard .module table td {
+        display: table-cell;
+        padding: 15px;
+    }
+
+    .dashboard .module table td a {
+        padding-right: .6em;
+    }
+
+    /* Action list items */
+    ul.actionlist li {
+        font-size: 18px;
+        padding: 12px 0;
+    }
+}
+
+/* For extra large screens (large desktops) */
+@media (min-width: 1200px) {
+    body {
+        font-size: 20px;
+    }
+
+    /* Adjust tables for wide screen layouts */
+    .dashboard .module table th, .dashboard .module table td {
+        padding: 20px;
+    }
+
+    .dashboard .module table td a {
+        padding-right: .8em;
+    }
+
+    /* Action list items */
+    ul.actionlist li {
+        font-size: 20px;
+        padding: 15px 0;
+    }
 }
