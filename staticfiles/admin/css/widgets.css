@@ -536,7 +536,361 @@ span.clearable-file-input label {
 .calendar-cancel:focus, .calendar-cancel:hover {
     background: var(--close-button-hover-bg);
 }
+/* Base styles with responsive modifications */
+:root {
+    --mobile-padding: 10px;
+    --mobile-touch-target: 44px;
+}
 
+/* Base responsive container */
+@media screen and (max-width: 1200px) {
+    .container {
+        width: 100%;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+}
+
+/* SELECTOR (FILTER INTERFACE) */
+.selector {
+    display: flex;
+    flex-grow: 1;
+    gap: 0 10px;
+}
+
+@media screen and (max-width: 768px) {
+    .selector {
+        flex-direction: column;
+        gap: 15px 0;
+        width: 100%;
+    }
+}
+
+/* Selector components */
+.selector select,
+.selector-available, 
+.selector-chosen {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media screen and (max-width: 768px) {
+    .selector select {
+        height: auto;
+        min-height: 200px;
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+
+    .selector-available, 
+    .selector-chosen {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+}
+
+/* Filter interface */
+.selector .selector-filter {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    gap: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    .selector .selector-filter {
+        padding: var(--mobile-padding);
+    }
+
+    .selector-filter input {
+        height: var(--mobile-touch-target);
+        font-size: 16px;
+    }
+}
+
+/* Chooser buttons */
+.selector ul.selector-chooser {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    .selector ul.selector-chooser {
+        flex-direction: row;
+        justify-content: center;
+        width: 100%;
+        padding: 15px 0;
+        transform: none;
+    }
+
+    .selector-add, 
+    .selector-remove {
+        width: var(--mobile-touch-target);
+        height: var(--mobile-touch-target);
+        background-size: 20px;
+        background-position: center;
+    }
+}
+
+/* Headers and Labels */
+.selector h2,
+.selector label {
+    margin: 0;
+    padding: 8px;
+    font-size: 14px;
+}
+
+@media screen and (max-width: 768px) {
+    .selector h2 {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    .selector label {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+/* DATE AND TIME */
+.datetime {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+@media screen and (max-width: 768px) {
+    .datetime {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .datetime input {
+        width: 100%;
+        height: var(--mobile-touch-target);
+        font-size: 16px;
+    }
+
+    .datetime span {
+        font-size: 14px;
+    }
+}
+
+/* CALENDAR AND CLOCK */
+.calendarbox,
+.clockbox {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@media screen and (max-width: 768px) {
+    .calendarbox,
+    .clockbox {
+        width: 95%;
+        margin: 10px auto;
+        font-size: 14px;
+    }
+
+    .calendar td,
+    .calendar th {
+        padding: 8px 4px;
+        font-size: 14px;
+    }
+
+    .calendar td a {
+        padding: 8px 4px;
+        min-height: var(--mobile-touch-target);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* FILE UPLOADS */
+.file-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    .file-upload {
+        width: 100%;
+    }
+
+    .file-upload input[type="file"] {
+        width: 100%;
+        height: var(--mobile-touch-target);
+    }
+
+    .file-upload .deletelink {
+        height: var(--mobile-touch-target);
+        line-height: var(--mobile-touch-target);
+        text-align: center;
+    }
+}
+
+/* URL Fields */
+.url {
+    word-break: break-all;
+}
+
+@media screen and (max-width: 768px) {
+    .url input {
+        width: 100%;
+        height: var(--mobile-touch-target);
+        font-size: 16px;
+    }
+}
+
+/* RELATED WIDGET WRAPPER */
+.related-widget-wrapper {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media screen and (max-width: 768px) {
+    .related-widget-wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .related-widget-wrapper select {
+        width: 100%;
+        height: var(--mobile-touch-target);
+        font-size: 16px;
+    }
+
+    .related-widget-wrapper-link {
+        height: var(--mobile-touch-target);
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* GIS MAPS */
+.dj_map {
+    max-width: 100%;
+    height: auto;
+}
+
+@media screen and (max-width: 768px) {
+    .dj_map {
+        height: 300px;
+    }
+}
+
+/* STACKED SELECTORS */
+.stacked {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media screen and (max-width: 768px) {
+    .stacked {
+        float: none;
+        padding: 0 var(--mobile-padding);
+    }
+
+    .stacked select {
+        width: 100%;
+        height: auto;
+        min-height: 200px;
+    }
+}
+
+/* Common Interactive Elements */
+@media screen and (max-width: 768px) {
+    button,
+    input[type="button"],
+    input[type="submit"],
+    .button,
+    .selector-chooseall,
+    .selector-clearall {
+        height: var(--mobile-touch-target);
+        min-width: var(--mobile-touch-target);
+        padding: 0 15px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Form Elements */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="url"],
+    input[type="number"],
+    textarea,
+    select {
+        width: 100%;
+        height: var(--mobile-touch-target);
+        font-size: 16px;
+        padding: 8px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+
+    /* Icons and Small UI Elements */
+    .help-icon,
+    .search-label-icon,
+    .calendar-icon,
+    .clock-icon {
+        width: 24px;
+        height: 24px;
+        background-size: contain;
+    }
+}
+
+/* Small Screen Optimizations */
+@media screen and (max-width: 480px) {
+    :root {
+        --mobile-padding: 8px;
+    }
+
+    .selector select {
+        min-height: 150px;
+    }
+
+    .calendar td,
+    .calendar th {
+        padding: 6px 2px;
+        font-size: 13px;
+    }
+
+    .dj_map {
+        height: 250px;
+    }
+}
+
+/* Table Responsiveness */
+@media screen and (max-width: 768px) {
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    td, th {
+        min-height: var(--mobile-touch-target);
+        padding: 8px;
+    }
+}
+
+/* Print Media Query */
+@media print {
+    .selector-chooser,
+    .selector-filter,
+    .calendar-shortcuts,
+    .calendar-cancel {
+        display: none;
+    }
+}
 .calendar-cancel a {
     color: var(--button-fg);
     display: block;
