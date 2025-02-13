@@ -1,5 +1,11 @@
-/* TABLETS */
+/* GENERAL RESET FOR RESPONSIVENESS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
+/* TABLETS */
 @media (max-width: 1024px) {
     [dir="rtl"] .colMS {
         margin-right: 0;
@@ -72,8 +78,12 @@
 }
 
 /* MOBILE */
-
 @media (max-width: 767px) {
+    body {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
     [dir="rtl"] .aligned .related-lookup,
     [dir="rtl"] .aligned .datetimeshortcuts {
         margin-left: 0;
@@ -89,6 +99,7 @@
         margin-left: 0;
         margin-right: 0;
     }
+
     [dir="rtl"] .aligned .vCheckboxLabel {
         padding: 1px 5px 0 0;
     }
@@ -101,11 +112,170 @@
         background-position: 0 -20px;
     }
 
-    [dir="rtl"] .selector-add  {
+    [dir="rtl"] .selector-add {
         background-position: 0 -40px;
     }
 
     [dir="rtl"] .active.selector-add:focus, .active.selector-add:hover {
         background-position: 0 -60px;
+    }
+
+    /* Adjust layout for tables */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    table th, table td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    /* Forms */
+    input[type="text"], input[type="password"], input[type="email"], textarea {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border: none;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 16px;
+        border-radius: 4px;
+    }
+
+    /* Images */
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+    }
+
+    /* Navigation */
+    nav {
+        display: block;
+        padding: 10px;
+        background-color: #333;
+    }
+
+    nav ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    nav ul li {
+        padding: 10px;
+        text-align: center;
+    }
+
+    nav ul li a {
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Icons */
+    .icon {
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+        background-size: contain;
+        margin: 0 10px;
+    }
+
+    /* Responsive layout shifts */
+    .container {
+        width: 90%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+    .col {
+        flex: 1;
+        padding: 10px;
+    }
+
+    /* Text Adjustments */
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    p {
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+
+    /* Make components responsive */
+    .responsive-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .responsive-table th, .responsive-table td {
+        white-space: nowrap;
+    }
+}
+
+/* MOBILE SMALLER (480px and below) */
+@media (max-width: 480px) {
+    body {
+        font-size: 12px;
+    }
+
+    /* Buttons */
+    button {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    /* Forms */
+    input[type="text"], input[type="password"], input[type="email"], textarea {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    /* Text and Image Scaling */
+    h1 {
+        font-size: 22px;
+    }
+
+    p {
+        font-size: 14px;
+    }
+
+    .icon {
+        width: 25px;
+        height: 25px;
+    }
+
+    .container {
+        width: 95%;
+    }
+
+    .col {
+        flex: 1;
+        padding: 8px;
+    }
+
+    /* Tables */
+    table th, table td {
+        padding: 8px;
+        font-size: 12px;
     }
 }
