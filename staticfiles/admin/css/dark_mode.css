@@ -1,77 +1,62 @@
+/* Default CSS for Dark Mode */
 @media (prefers-color-scheme: dark) {
     :root {
-      --primary: #264b5d;
-      --primary-fg: #f7f7f7;
-  
-      --body-fg: #eeeeee;
-      --body-bg: #121212;
-      --body-quiet-color: #d0d0d0;
-      --body-medium-color: #e0e0e0;
-      --body-loud-color: #ffffff;
-  
-      --breadcrumbs-link-fg: #e0e0e0;
-      --breadcrumbs-bg: var(--primary);
-  
-      --link-fg: #81d4fa;
-      --link-hover-color: #4ac1f7;
-      --link-selected-fg: #6f94c6;
-  
-      --hairline-color: #272727;
-      --border-color: #353535;
-  
-      --error-fg: #e35f5f;
-      --message-success-bg: #006b1b;
-      --message-warning-bg: #583305;
-      --message-error-bg: #570808;
-  
-      --darkened-bg: #212121;
-      --selected-bg: #1b1b1b;
-      --selected-row: #00363a;
-  
-      --close-button-bg: #333333;
-      --close-button-hover-bg: #666666;
-
-      color-scheme: dark;
+        --primary: #264b5d;
+        --primary-fg: #f7f7f7;
+        --body-fg: #eeeeee;
+        --body-bg: #121212;
+        --body-quiet-color: #d0d0d0;
+        --body-medium-color: #e0e0e0;
+        --body-loud-color: #ffffff;
+        --breadcrumbs-link-fg: #e0e0e0;
+        --breadcrumbs-bg: var(--primary);
+        --link-fg: #81d4fa;
+        --link-hover-color: #4ac1f7;
+        --link-selected-fg: #6f94c6;
+        --hairline-color: #272727;
+        --border-color: #353535;
+        --error-fg: #e35f5f;
+        --message-success-bg: #006b1b;
+        --message-warning-bg: #583305;
+        --message-error-bg: #570808;
+        --darkened-bg: #212121;
+        --selected-bg: #1b1b1b;
+        --selected-row: #00363a;
+        --close-button-bg: #333333;
+        --close-button-hover-bg: #666666;
+        color-scheme: dark;
     }
-  }
+}
 
-
+/* HTML for dark theme */
 html[data-theme="dark"] {
     --primary: #264b5d;
     --primary-fg: #f7f7f7;
-
     --body-fg: #eeeeee;
     --body-bg: #121212;
     --body-quiet-color: #d0d0d0;
     --body-medium-color: #e0e0e0;
     --body-loud-color: #ffffff;
-
     --breadcrumbs-link-fg: #e0e0e0;
     --breadcrumbs-bg: var(--primary);
-
     --link-fg: #81d4fa;
     --link-hover-color: #4ac1f7;
     --link-selected-fg: #6f94c6;
-
     --hairline-color: #272727;
     --border-color: #353535;
-
     --error-fg: #e35f5f;
     --message-success-bg: #006b1b;
     --message-warning-bg: #583305;
     --message-error-bg: #570808;
-
     --darkened-bg: #212121;
     --selected-bg: #1b1b1b;
     --selected-row: #00363a;
-
     --close-button-bg: #333333;
     --close-button-hover-bg: #666666;
-
     color-scheme: dark;
 }
 
-/* THEME SWITCH */
+/* THEME SWITCHER */
 .theme-toggle {
     cursor: pointer;
     border: none;
@@ -89,10 +74,6 @@ html[data-theme="dark"] {
     display: none;
 }
 
-/*
-Fully hide screen reader text so we only show the one matching the current
-theme.
-*/
 .theme-toggle .visually-hidden {
     display: none;
 }
@@ -127,4 +108,125 @@ html[data-theme="dark"] .theme-toggle svg.theme-icon-when-dark {
 
 html[data-theme="light"] .theme-toggle svg.theme-icon-when-light {
     display: block;
+}
+
+/* MOBILE-RESPONSIVE STYLES */
+
+/* For small screens (mobile phones) */
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* Adjust theme switch icon size for mobile */
+    .theme-toggle svg {
+        height: 1.5rem;
+        width: 1.5rem;
+    }
+
+    /* Make breadcrumbs more compact */
+    .breadcrumbs {
+        font-size: 14px;
+        padding: 5px;
+    }
+
+    /* Adjust links for better tap targets */
+    a {
+        font-size: 14px;
+    }
+
+    /* Adjust padding and margins */
+    .theme-toggle {
+        margin-inline-start: 0;
+        margin-top: 0;
+    }
+
+    /* Adjust content layout */
+    .content {
+        padding: 5px;
+    }
+}
+
+/* For medium screens (tablets) */
+@media (max-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+
+    /* Adjust theme switch icon size */
+    .theme-toggle svg {
+        height: 1.75rem;
+        width: 1.75rem;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    /* Links */
+    a {
+        font-size: 16px;
+    }
+
+    /* Content adjustments */
+    .content {
+        padding: 10px;
+    }
+}
+
+/* For larger screens (desktops and large tablets) */
+@media (min-width: 769px) {
+    body {
+        font-size: 18px;
+    }
+
+    .theme-toggle svg {
+        height: 2rem;
+        width: 2rem;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+        font-size: 18px;
+    }
+
+    /* Links */
+    a {
+        font-size: 18px;
+    }
+
+    /* Content adjustments */
+    .content {
+        padding: 20px;
+    }
+}
+
+/* For extra large screens (large desktops) */
+@media (min-width: 1200px) {
+    body {
+        font-size: 20px;
+    }
+
+    .theme-toggle svg {
+        height: 2.5rem;
+        width: 2.5rem;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+        font-size: 20px;
+    }
+
+    /* Links */
+    a {
+        font-size: 20px;
+    }
+
+    /* Content adjustments */
+    .content {
+        padding: 30px;
+    }
 }
