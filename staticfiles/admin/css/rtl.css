@@ -1,5 +1,4 @@
 /* GLOBAL */
-
 th {
     text-align: right;
 }
@@ -35,7 +34,6 @@ tfoot td:first-child {
 }
 
 /* LAYOUT */
-
 #user-tools {
     right: auto;
     left: 0;
@@ -62,7 +60,6 @@ div.breadcrumbs {
 }
 
 /* SORTABLE TABLES */
-
 table thead th.sorted .sortoptions {
    float: left;
 }
@@ -73,14 +70,12 @@ thead th.sorted .text {
 }
 
 /* dashboard styles */
-
 .dashboard .module table td a {
     padding-left: .6em;
     padding-right: 16px;
 }
 
 /* changelists styles */
-
 .change-list .filtered table {
     border-left: none;
     border-right: 0px none;
@@ -118,7 +113,6 @@ thead th.sorted .text {
 }
 
 /* FORMS */
-
 .aligned label {
     padding: 0 0 3px 1em;
 }
@@ -192,7 +186,6 @@ fieldset .fieldBox {
 }
 
 /* WIDGETS */
-
 .calendarnav-previous {
     top: 0;
     left: auto;
@@ -264,9 +257,8 @@ form .form-row p.datetime {
 }
 
 /* MISC */
-
 .inline-related h2, .inline-group h2 {
-    text-align: right
+    text-align: right;
 }
 
 .inline-related h3 span.delete {
@@ -288,4 +280,102 @@ form .form-row p.datetime {
 
 .selector .selector-chooser {
     margin: 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    /* Adjust the layout for small screens */
+    .object-tools {
+        float: none;
+        clear: both;
+    }
+
+    #content-main, #content-related {
+        float: none;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .colMS {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Table Styles */
+    table thead th, table tbody td {
+        font-size: 14px;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .module ul, .module ol {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Adjust forms for mobile */
+    form .aligned ul {
+        margin-right: 0;
+        padding-right: 0;
+    }
+
+    .submit-row {
+        text-align: left;
+        margin-top: 20px;
+    }
+
+    .form-row input {
+        width: 100%;
+        padding: 8px;
+        margin-left: 0;
+    }
+
+    .errornote, .errorlist li {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .calendarnav-previous, .calendarnav-next {
+        background-size: 16px 16px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .calendar caption, .calendarbox h2 {
+        font-size: 18px;
+    }
+
+    /* Selector Icons */
+    .selector-add, .selector-remove, a.selector-chooseall, a.selector-clearall {
+        width: 30px;
+        height: 30px;
+    }
+
+    .inline-deletelink {
+        float: none;
+    }
+
+    .related-widget-wrapper {
+        float: none;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further adjustments for very small screens */
+    th, td {
+        padding: 8px;
+    }
+
+    .module h2, .module caption {
+        font-size: 18px;
+    }
+
+    .selector .selector-filter {
+        text-align: left;
+    }
+
+    .form-row input {
+        padding: 6px;
+    }
 }
