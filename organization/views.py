@@ -701,6 +701,14 @@ def editCompanyProfile(request):
         'current_photo': user_profile.photo if user_profile.photo else None
     }
     return render(request, 'organization/editCompany.html', {'form': form})
+@login_required()
+def companyDashboard(request):
+    us = organization.objects.get(org=request.user)
+    if us is None:
+        messages.error(request,"Become a Organization first")
+        return redirect('home')
+    else :
+        return render(request,'organization/companydashboard.html')
 # cap = None
 # detector = dlib.get_frontal_face_detector()
 # predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")

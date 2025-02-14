@@ -10,32 +10,6 @@
 
     <!-- jQuery for AJAX -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <style>
-        .modal-body {
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        /* Custom scrollbar styling */
-        .modal-body::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .modal-body::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-    </style>
 </head>
 <body class="bg-light">
 
@@ -63,22 +37,19 @@
     </div>
 </div>
 
-<!-- Scrollable Modal for Analysis Result -->
+<!-- Bootstrap Modal for Analysis Result -->
 <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="resultModalLabel">Resume Analysis Result</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="analysisResult"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="resultModalLabel">Resume Analysis Result</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="analysisResult"></p>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- JavaScript for AJAX -->
@@ -90,7 +61,7 @@ $(document).ready(function () {
         let formData = new FormData(this);
 
         $.ajax({
-            url: "/ats/analyze_resume/",  // Django endpoint
+            url: "/analyze_resume/",  // Django endpoint
             type: "POST",
             data: formData,
             processData: false,
@@ -98,8 +69,7 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.success) {
                     $("#analysisResult").html(response.data.replace(/\n/g, "<br>"));
-                    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
-                    resultModal.show();
+                    $("#resultModal").modal("show");
                 } else {
                     alert("Error: " + response.error);
                 }

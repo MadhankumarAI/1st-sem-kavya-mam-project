@@ -11,12 +11,12 @@ from django.contrib import messages
 from .utils import *
 
 
-# views.py
 
-@login_required(login_url='reg')
-def home_view(request):
-    post = posts.objects.all()
-    return render(request, 'bot/home.html', {'post': post})
+
+
+def inm(request):
+    return redirect('home')
+
 
 @login_required
 def chatcreate(request, post):

@@ -8,6 +8,9 @@ import json
 from .utils import *
 from django.contrib import messages
 
+from organization.models import *
+
+
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -237,6 +240,16 @@ def reset_password(request):
             messages.error(request, 'An error occurred. Please try again.')
 
     return render(request, 'users/reset_password.html')
+@login_required(login_url='reg')
+def home_view(request):
+
+    us = request.user
+    prof, created = UserProfile.objects.get_or_create(user=us)
+    if organization.objects.get(org=us):
+        a = True
+    else :
+        a = False
+    return render(request, 'bot/userdashboard.html', {'prof' : prof, 'user' : us,'a' : a})
 
 @login_required(login_url='reg/')
 def editProfile(request):
@@ -249,8 +262,6 @@ def editProfile(request):
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = request.user
-
-            # Handle photo upload explicitly
             if 'photo' in request.FILES:
                 profile.photo = request.FILES['photo']
 
