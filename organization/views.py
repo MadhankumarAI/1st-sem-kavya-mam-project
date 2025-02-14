@@ -10,7 +10,7 @@ from .forms import *
 from .utils import *
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.utils import timezone
 import json
 from django.contrib import messages
@@ -699,7 +699,34 @@ def approve_application(request, application_id):
         return redirect('company_applications',Application.objects.get(id=application_id).interview.id)
 
     return redirect('company_applications',Application.objects.get(id=application_id).interview.id)
-#
+
+
+@login_required
+def leaderboard_view(request, interview_id):
+    """View to show leaderboard for a specific interview"""
+    try:
+        org = organization.objects.get(org=request.user)
+    except organization.DoesNotExist:
+        return HttpResponseForbidden("Only company accounts can access the leaderboard")
+
+    # Get the specific interview and verify it belongs to this organization
+    interview = get_object_or_404(Custominterviews, id=interview_id, org=org)
+
+    # Get leaderboard entries for this specific interview
+    leaderboard_entries = leaderBoard.objects.filter(
+        Application__interview=interview
+    ).select_related(
+        'Application__user',
+        'Application__interview'
+    ).order_by('-Score')
+
+    context = {
+        'leaderboard_entries': leaderboard_entries,
+        'organization': org,
+        'interview': interview
+    }
+    return render(request, 'organization/leaderboard.html', context)
+
 # cap = None
 # detector = dlib.get_frontal_face_detector()
 # predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
