@@ -18,15 +18,11 @@ def register(request):
                 'password': form.cleaned_data['password1'],
             }
             username1 = form.cleaned_data['username']
-            us = User.objects.filter(username=username1)
-            if us is not None:
+
+            if User.objects.filter(username=username1).exists():
                 messages.error(request,"Username already exsists")
                 return render(request, 'users/register.html', {'form': form})
-            email = form.cleaned_data['email'],
-            us = User.objects.filter(email=email)
-            if us is not None:
-                messages.error(request,"Username already exsists")
-                return render(request, 'users/register.html', {'form': form})
+
             request.session['pending_user'] = user_data
 
             # Generate and store verification code in session
@@ -193,7 +189,7 @@ def resend_reset_code(request):
 
         try:
             # Generate new code
-            reset_code = generate_reset_code()
+            reset_code = generate_verification_code()
             request.session['reset_code'] = reset_code
             request.session['code_generated_at'] = timezone.now().timestamp()
 
