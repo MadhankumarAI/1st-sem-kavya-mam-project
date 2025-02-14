@@ -61,7 +61,7 @@ $(document).ready(function () {
         let formData = new FormData(this);
 
         $.ajax({
-            url: "/analyze_resume/",  // Django endpoint
+            url: "/ats/analyze_resume/",  // Django endpoint
             type: "POST",
             data: formData,
             processData: false,
