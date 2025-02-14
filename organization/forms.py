@@ -2,22 +2,10 @@ from django import forms
 from .models import *
 
 class CustomInterviewsform(forms.ModelForm):
-    startTime = forms.DateTimeField(
-        widget=forms.DateTimeInput(
-            attrs={'type': 'datetime-local'},
-            format='%Y-%m-%dT%H:%M'
-        )
-    )
-    endTime = forms.DateTimeField(
-        widget=forms.DateTimeInput(
-            attrs={'type': 'datetime-local'},
-            format='%Y-%m-%dT%H:%M'
-        )
-    )
 
     class Meta:
         model = Custominterviews
-        fields = ('desc', 'post', 'questions', 'experience', 'startTime', 'endTime')
+        fields = ('desc', 'post', 'questions', 'submissionDeadline','experience', 'startTime', 'endTime')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -30,5 +18,10 @@ class CustomInterviewsform(forms.ModelForm):
 class postingsForm(forms.ModelForm):
     class Meta:
         model = postings
-        fields = ('desc','post','experience')
+        fields = ('desc','post','experience','deadline')
+
+class EditCompanyForm(forms.ModelForm):
+    class Meta:
+        model = organization
+        fields = ['orgname','address','photo','Description']
 

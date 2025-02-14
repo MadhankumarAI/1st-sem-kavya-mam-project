@@ -13,3 +13,11 @@ class CustomAuthenticationForm(AuthenticationForm):
     class Meta:
         model = User
         fields = ['username', 'password1',]
+class ProfileCreationForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['leetcode','github','photo','bio']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['photo'].widget.attrs.update({'class': 'hidden'})

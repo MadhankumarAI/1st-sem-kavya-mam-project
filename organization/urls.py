@@ -7,8 +7,7 @@ from . import views
 urlpatterns = [
 
     path('postings/', views.getpostings,name= 'postings'),
-    path('', views.register,name= 'compreg'),
-    path('login', views.login_view,name='complogin'),
+    path('login', views.orglogin_view,name='complogin'),
     path('verify-email/', views.verify_email, name='compverify_email'),
     path('resend-code/', views.resend_code, name='compresend_code'),
     path('logout/', views.logoutView, name='complogout'),
@@ -29,6 +28,7 @@ urlpatterns = [
     path('company/interviews/<int:interview_id>/applications/', views.company_applications,name='company_applications'),
     path('company/applications/approve/<int:application_id>/', views.approve_application, name='approve_application'),
     path('leaderboard/<int:interview_id>/', views.leaderboard_view, name='leaderboard'),
+    path('edit',views.editCompanyProfile,name='editcompany')
     # path('video_feed/', views.video_feed, name='video_feed'),
     # path('toggle_camera/', views.toggle_camera, name='toggle_camera'),
     # path('end_meeting/', views.end_meeting, name='end_meeting'),

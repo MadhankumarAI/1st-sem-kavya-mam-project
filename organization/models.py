@@ -1,3 +1,4 @@
+from datetime import timezone
 from enum import UNIQUE
 
 from django.contrib.auth.models import User
@@ -7,7 +8,7 @@ class organization(models.Model):
     org = models.ForeignKey(User, on_delete=models.CASCADE)
     orgname = models.CharField(max_length=100)
     address = models.TextField()
-    Photo = models.ImageField(upload_to='./orgs',null=True,blank=True)
+    photo = models.ImageField(upload_to='./orgs',null=True,blank=True)
     Description = models.TextField()
     def __str__(self):
         return self.orgname
@@ -50,7 +51,7 @@ class postings(models.Model):
     desc = models.TextField()
     post = models.TextField()
     experience = models.CharField(max_length=10)
-
+    deadline = models.DateTimeField()
     def __str__(self):
         return f'{self.org.orgname}-{self.post}'
 class leaderBoard(models.Model):

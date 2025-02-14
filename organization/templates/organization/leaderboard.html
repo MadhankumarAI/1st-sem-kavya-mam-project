@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,96 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaderboard - {{ interview.post }}</title>
     <style>
-        /* Previous CSS styles remain the same */
-        .back-button {
-            margin-bottom: 20px;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: white;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
         }
-
         .interview-info {
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            background: #0072ff;
             color: white;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 12px;
             margin-bottom: 30px;
+            text-align: center;
         }
-
-        .interview-info h2 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 500;
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
-
-        .interview-info p {
-            margin: 10px 0 0;
-            opacity: 0.9;
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+            color: #333;
+        }
+        .leaderboard-table th {
+            background: #005bbf;
+            color: white;
+        }
+        .rank-1 { color: #ffcc00; font-weight: bold; }
+        .rank-2 { color: #c0c0c0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+        .btn-primary {
+            text-decoration: none;
+            color: white;
+            background: #005bbf;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background 0.3s;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .btn-primary:hover {
+            background: #0040a0;
+        }
+        .back-button {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="leaderboard-card">
-            <div class="back-button">
-                <a href="{% url 'company_interviews' %}" class="btn btn-primary">
-                    ← Back to Interviews
-                </a>
-            </div>
+    <div class="interview-info">
+        <h2>{{ interview.post }}</h2>
+        <p><strong>Experience Required:</strong> {{ interview.experience }}</p>
+        <p><strong>Interview Period:</strong> {{ interview.startTime|date:"M d, Y" }} - {{ interview.endTime|date:"M d, Y" }}</p>
+    </div>
 
-            <div class="interview-info">
-                <h2>{{ interview.post }}</h2>
-                <p>Experience Required: {{ interview.experience }}</p>
-                <p>Interview Period: {{ interview.startTime|date:"M d, Y" }} - {{ interview.endTime|date:"M d, Y" }}</p>
-            </div>
+    <h1>Interview Leaderboard</h1>
+    <p>{{ organization.orgname }}</p>
 
-            <div class="leaderboard-header">
-                <h1>Interview Leaderboard</h1>
-                <p>{{ organization.orgname }}</p>
-            </div>
+    <table class="leaderboard-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Candidate</th>
+                <th>Score</th>
+                <th>Completion Time</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in leaderboard_entries %}
+            <tr>
+                <td>
+                    {% if forloop.counter == 1 %}
+                        <span class="rank-1">👑 1st</span>
+                    {% elif forloop.counter == 2 %}
+                        <span class="rank-2">🥈 2nd</span>
+                    {% elif forloop.counter == 3 %}
+                        <span class="rank-3">🥉 3rd</span>
+                    {% else %}
+                        {{ forloop.counter }}th
+                    {% endif %}
+                </td>
+                <td>{{ entry.Application.user.username }}</td>
+                <td>{{ entry.Score }}%</td>
+                <td>{{ entry.Application.interview.endTime|date:"M d, Y H:i" }}</td>
+                <td>
+                    {% if entry.Application.resume %}
+                        <a href="{{ entry.Application.resume.url }}" class="btn-primary" target="_blank">View Resume</a>
+                    {% else %}
+                        <span class="text-muted">No resume uploaded</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No candidates have completed this interview yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-            <table class="leaderboard-table">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Candidate</th>
-                        <th>Score</th>
-                        <th>Completion Time</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for entry in leaderboard_entries %}
-                    <tr>
-                        <td>
-                            {% if forloop.counter == 1 %}
-                                <span class="rank-1"><span class="rank-icon">👑</span>1st</span>
-                            {% elif forloop.counter == 2 %}
-                                <span class="rank-2"><span class="rank-icon">🥈</span>2nd</span>
-                            {% elif forloop.counter == 3 %}
-                                <span class="rank-3"><span class="rank-icon">🥉</span>3rd</span>
-                            {% else %}
-                                {{ forloop.counter }}th
-                            {% endif %}
-                        </td>
-                        <td>{{ entry.Application.user.username }}</td>
-                        <td>{{ entry.Score }}%</td>
-                        <td>{{ entry.Application.interview.endTime|date:"M d, Y H:i" }}</td>
-                        <td>
-                            {% if entry.Application.resume %}
-                                <a href="{{ entry.Application.resume.url }}" class="btn btn-primary" target="_blank">
-                                    View Resume
-                                </a>
-                            {% else %}
-                                <span class="text-muted">No resume uploaded</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" style="text-align: center;">No candidates have completed this interview yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="back-button">
+        <a href="{% url 'company_interviews' %}" class="btn-primary">⬅ Back to Interviews</a>
     </div>
 </body>
 </html>

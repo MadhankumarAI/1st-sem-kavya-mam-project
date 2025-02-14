@@ -1,4 +1,4 @@
-
+9
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -12,11 +12,11 @@ client = Groq(
 )
 @login_required()
 def index(request):
- 
+
     return render(request, "index.html")
 
 def extract_text_from_pdf(pdf_file):
-  
+
     try:
         pdf_reader = PdfReader(pdf_file)
         text = ""
@@ -28,7 +28,7 @@ def extract_text_from_pdf(pdf_file):
 
 @csrf_exempt
 def analyze_resume(request):
- 
+
     if request.method == "POST" and request.FILES.get("resume"):
         try:
             # Extract job role and company from request
@@ -38,7 +38,7 @@ def analyze_resume(request):
             # Read uploaded PDF and extract text
             pdf_file = request.FILES["resume"]
             resume_text = extract_text_from_pdf(pdf_file)
-            
+
             if not resume_text:
                 return JsonResponse({"success": False, "error": "Unable to extract text from the uploaded resume."})
 
@@ -59,7 +59,7 @@ def analyze_resume(request):
 
             response_text = chat_completion.choices[0].message.content
 
-           
+
             return JsonResponse(
                 {
                     "success": True,

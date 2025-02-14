@@ -4,64 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Listings - Bengaluru, Karnataka</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background: #f4f6f9;
+            color: #333;
             margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
+            padding: 20px;
         }
-        header {
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        header h1 {
-            font-size: 24px;
-            color: #333333;
+        .container {
+            max-width: 1000px;
+            margin: auto;
         }
         .search-bar {
             display: flex;
             gap: 10px;
+            margin-bottom: 20px;
         }
-        .search-bar input {
-            padding: 8px;
-            border: 1px solid #cccccc;
-            border-radius: 4px;
+        .search-bar input, .search-bar select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            flex: 1;
         }
         .search-bar button {
-            padding: 8px 16px;
+            padding: 10px 16px;
             background-color: #0073b1;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
         }
         .search-bar button:hover {
             background-color: #005f8d;
         }
-        .job-listings {
-            padding: 20px;
-        }
         .job-card {
-            background-color: #ffffff;
-            border: 1px solid #dddddd;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
         }
         .job-card h2 {
-            font-size: 18px;
-            margin: 0 0 8px;
-            color: #333333;
+            font-size: 20px;
+            color: #333;
         }
         .job-card p {
+            color: #666;
             margin: 4px 0;
-            color: #666666;
         }
         .job-card .company {
             font-weight: bold;
@@ -69,46 +61,64 @@
         .job-card .location {
             color: #0073b1;
         }
-        footer {
-            text-align: center;
-            padding: 10px;
-            background-color: #f2f2f2;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Job Listings</h1>
+    <div class="container">
+        <header class="mb-4">
+            <h2>Job Listings</h2>
+        </header>
+
         <div class="search-bar">
-            <input type="text" placeholder="Job title, keywords, or company">
-            <input type="text" placeholder="City, state, or zip code">
-            <button>Search</button>
+            <input type="text" id="search-title" placeholder="Job title, keywords, or company">
+            <input type="text" id="search-location" placeholder="City, state, or zip code">
+            <select id="search-type">
+                <option value="">Job Type</option>
+                <option value="full-time">Full-Time</option>
+                <option value="part-time">Part-Time</option>
+                <option value="remote">Remote</option>
+            </select>
+            <button onclick="filterJobs()">Search</button>
         </div>
-    </header>
-    <div class="job-listings">
-{% if jobs %}
-       {% for j in jobs %}
-        <div class="job-card">
-            <h2>{{j.post}}</h2>
-            <p class="company">{{j.org.orgname}}</p>
-            <p class="location">{{j.org.address}}</p>
-            <p>Experience : {{j.org.address}}</p>
-            <p>{{ j.org.desc }}</p>
+
+        <div class="job-listings" id="job-list">
+            {% if jobs %}
+                {% for j in jobs %}
+                <div class="job-card" data-title="{{ j.post }}" data-company="{{ j.org.orgname }}" data-location="{{ j.org.address }}" data-type="{{ j.type }}">
+                    <h2>{{ j.post }}</h2>
+                    <p class="company">{{ j.org.orgname }}</p>
+                    <p class="location">{{ j.org.address }}</p>
+                    <p>Experience: {{ j.experience }} years</p>
+                    <p>{{ j.org.desc }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center">No job listings available.</p>
+            {% endif %}
         </div>
-        {% endfor %}
-        {% endif %}
     </div>
-    <footer>
-        <p>&copy; 2023 Job Portal. All rights reserved.</p>
-    </footer>
+
     <script>
-        // Simple JavaScript to handle search functionality
-        document.querySelector('.search-bar button').addEventListener('click', function () {
-            const jobTitle = document.querySelectorAll('.search-bar input')[0].value;
-            const location = document.querySelectorAll('.search-bar input')[1].value;
-            alert(Searching for "${jobTitle}" in "${location}");
-        });
+        function filterJobs() {
+            const title = document.getElementById("search-title").value.toLowerCase();
+            const location = document.getElementById("search-location").value.toLowerCase();
+            const type = document.getElementById("search-type").value;
+
+            document.querySelectorAll(".job-card").forEach(job => {
+                const jobTitle = job.getAttribute("data-title").toLowerCase();
+                const jobCompany = job.getAttribute("data-company").toLowerCase();
+                const jobLocation = job.getAttribute("data-location").toLowerCase();
+                const jobType = job.getAttribute("data-type");
+
+                if ((title === "" || jobTitle.includes(title) || jobCompany.includes(title)) &&
+                    (location === "" || jobLocation.includes(location)) &&
+                    (type === "" || jobType === type)) {
+                    job.style.display = "block";
+                } else {
+                    job.style.display = "none";
+                }
+            });
+        }
     </script>
 </body>
 </html>

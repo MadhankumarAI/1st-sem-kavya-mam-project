@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import *
 from django.contrib.auth import login, authenticate, logout
@@ -236,3 +237,33 @@ def reset_password(request):
             messages.error(request, 'An error occurred. Please try again.')
 
     return render(request, 'users/reset_password.html')
+
+@login_required(login_url='reg/')
+def editProfile(request):
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        # Add debug prints to check what's coming in
+        print("FILES:", request.FILES)  # Debug print
+        form = ProfileCreationForm(request.POST, request.FILES, instance=user_profile)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+
+            # Handle photo upload explicitly
+            if 'photo' in request.FILES:
+                profile.photo = request.FILES['photo']
+
+            profile.save()
+            return redirect('home')
+        else:
+            print("Form errors:", form.errors)  # Debug print
+    else:
+        form = ProfileCreationForm(instance=user_profile)
+
+    # Add context to show current photo
+    context = {
+        'form': form,
+        'current_photo': user_profile.photo if user_profile.photo else None
+    }
+    return render(request, 'users/editProfile.html', {'form': form})

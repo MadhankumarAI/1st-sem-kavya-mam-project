@@ -1,7 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<!-- Previous head content remains same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +10,7 @@
     <script src="https://docs.opencv.org/4.5.4/opencv.js"></script>
     <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
     <style>
+        /* Your existing CSS styles */
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #F8F9FA;
@@ -94,6 +94,7 @@
             border-radius: 12px;
             padding: 12px;
             align-self: flex-end;
+            max-width: 80%;
         }
 
         .message.ai .content {
@@ -102,6 +103,7 @@
             border-radius: 12px;
             padding: 12px;
             align-self: flex-start;
+            max-width: 80%;
         }
 
         .chat-footer {
@@ -127,9 +129,7 @@
             border-radius: 24px;
             cursor: pointer;
         }
-        /* Previous styles remain same */
 
-        /* Add styles for malpractice warning */
         .malpractice-warning {
             position: fixed;
             top: 20px;
@@ -139,44 +139,24 @@
             color: white;
             padding: 15px 30px;
             border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             z-index: 1000;
+            font-weight: 500;
+            text-align: center;
             display: none;
             animation: fadeIn 0.3s ease-in;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .warning-icon {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 20px;
-            height: 20px;
-            background-color: #ff0000;
-            border-radius: 50%;
-            display: none;
-        }
-        end-interview-button {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            padding: 8px 16px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .end-interview-button:hover {
-            background-color: #c82333;
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
         }
     </style>
 </head>
 <body>
+<div class="malpractice-warning" id="malpractice-warning">
+    Warning: Malpractice detected. This incident has been recorded.
+</div>
 <div class="main-container">
     <div class="video-container">
         <video id="videoElement" autoplay playsinline></video>
@@ -185,187 +165,199 @@
         </div>
     </div>
     <div class="chat-container">
-        <div class="chat-header">
-            AI Chat
-            <button class="end-interview-button" id="endInterviewButton">End Interview</button>
-        </div>
+        <div class="chat-header">AI Interview</div>
         <div class="chat-messages" id="chat-messages">
             {% for question in questions %}
-            <div class="message {{ question.user }}">
-                <div class="content">{{ question.question }}</div>
-            </div>
+                <div class="message {{ question.user }}">
+                    <div class="content">{{ question.question }}</div>
+                </div>
             {% endfor %}
         </div>
         <div class="chat-footer">
             <input id="response-input" type="text" placeholder="Type your response...">
-            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
             <button class="send-button" id="send-button">Send</button>
         </div>
     </div>
 </div>
-<div class="malpractice-warning" id="malpracticeWarning">
-    ⚠ Warning: Tab switching detected! This will be recorded as potential malpractice.
-</div>
 
 <script>
-class ChatInterface {
-    constructor(applicationId) {
-        this.applicationId = applicationId;
-        this.chatMessages = document.getElementById('chat-messages');
-        this.responseInput = document.getElementById('response-input');
-        this.sendButton = document.getElementById('send-button');
-        this.endInterviewButton = document.getElementById('endInterviewButton');
-        this.setupEventListeners();
+    // Initialize important variables
+    const applicationId = {{ applicationId|safe }};
+    const isCheated = {{ is_cheated|yesno:"true,false" }};
+    let isInterviewComplete = false;
+
+    // Redirect to home if cheating is detected
+    if (isCheated) {
+        window.location.href = '{% url "home" %}';
     }
 
-    setupEventListeners() {
-        this.sendButton.addEventListener('click', () => this.sendMessage());
-        this.responseInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.sendMessage();
+    // Show malpractice warning if cheating is detected
+    if (isCheated) {
+        const warningDiv = document.getElementById('malpractice-warning');
+        warningDiv.style.display = 'block';
+    }
+
+    class CheatingDetector {
+        constructor(applicationId) {
+            this.applicationId = applicationId;
+            this.hasCheated = false;
+            this.initializeDetection();
+        }
+
+        initializeDetection() {
+            // Detect page refresh
+            window.addEventListener('beforeunload', () => {
+                this.handleCheating();
+            });
+
+            // Detect tab switch or window blur
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    this.handleCheating();
+                }
+            });
+
+            window.addEventListener('blur', () => {
+                this.handleCheating();
+            });
+        }
+
+        async handleCheating() {
+            if (this.hasCheated) return;
+
+            this.hasCheated = true;
+            const warningDiv = document.getElementById('malpractice-warning');
+            warningDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('{% url "cheated" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        id: this.applicationId
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to record cheating incident');
+                }
+            } catch (error) {
+                console.error('Error recording cheating:', error);
             }
-        });
-        this.endInterviewButton.addEventListener('click', () => this.endInterview());
-    }
-
-    async endInterview() {
-        try {
-window.location.href = `/org/evaluate-${this.applicationId}/`;        } catch (error) {
-            console.error('Error ending interview:', error);
         }
     }
 
-    async sendMessage() {
-        const messageText = this.responseInput.value.trim();
+    // Initialize video stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            document.getElementById("videoElement").srcObject = stream;
+        })
+        .catch(err => console.error("Error accessing camera:", err));
+
+    // Speech Recognition Setup
+    const micButton = document.createElement('span');
+    micButton.textContent = '🎤';
+    micButton.style.cursor = 'pointer';
+    document.querySelector('.chat-footer').appendChild(micButton);
+
+    micButton.addEventListener('click', () => {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.onresult = event => {
+            document.getElementById('response-input').value = event.results[0][0].transcript;
+        };
+        recognition.start();
+    });
+
+    // Text-to-Speech function
+    function speakMessage(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        speechSynthesis.speak(utterance);
+    }
+
+    // Chat functionality
+    const chatMessages = document.getElementById('chat-messages');
+    const responseInput = document.getElementById('response-input');
+    const sendButton = document.getElementById('send-button');
+
+    async function sendMessage() {
+        if (isInterviewComplete) return;
+
+        const messageText = responseInput.value.trim();
         if (!messageText) return;
 
-        this.addMessageToChat('user', messageText);
-        this.responseInput.value = '';
+        // Add user message to chat
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'message user';
+        userMessageDiv.innerHTML = `<div class="content">${messageText}</div>`;
+        chatMessages.appendChild(userMessageDiv);
+
+        responseInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
 
         try {
-            const response = await fetch(`{% url 'compchat' convoid=convo.id %}`, {
+            const response = await fetch(window.location.href, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCsrfToken()
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
                 body: JSON.stringify({
-                    response: messageText,
+                    response: messageText
                 })
             });
 
             const data = await response.json();
 
             if (data.reply) {
-                this.addMessageToChat('ai', data.reply);
+                const aiReplyDiv = document.createElement('div');
+                aiReplyDiv.className = 'message ai';
+                aiReplyDiv.innerHTML = `<div class="content">${data.reply}</div>`;
+                chatMessages.appendChild(aiReplyDiv);
+                speakMessage(data.reply);
             }
 
             if (data.next_question) {
                 if (data.next_question.includes("INTERVIEW_COMPLETE")) {
-                    window.location.href = '/';
-                } else {
-                    this.addMessageToChat('ai', data.next_question);
+                    isInterviewComplete = true;
+                    window.location.href = '{% url "home" %}';
+                    return;
                 }
+
+                const aiQuestionDiv = document.createElement('div');
+                aiQuestionDiv.className = 'message ai';
+                aiQuestionDiv.innerHTML = `<div class="content">${data.next_question}</div>`;
+                chatMessages.appendChild(aiQuestionDiv);
+                speakMessage(data.next_question);
             }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
         } catch (error) {
             console.error('Error sending message:', error);
-            this.addMessageToChat('ai', 'Sorry, there was an error processing your message.');
         }
     }
 
-    addMessageToChat(type, content) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}`;
-        messageDiv.innerHTML = `<div class="content">${content}</div>`;
-        this.chatMessages.appendChild(messageDiv);
-        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-    }
-
-    getCsrfToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]').value;
-    }
-}
-
-class MalpracticeDetector {
-    constructor(applicationId) {
-        this.applicationId = applicationId;
-        this.violations = [];
-        this.tabSwitchCount = 0;
-        this.startTime = Date.now();
-        this.initializeDetection();
-    }
-
-    initializeDetection() {
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.recordViolation('Tab switched');
-            }
-        });
-
-        window.addEventListener('blur', () => {
-            this.recordViolation('Window lost focus');
-        });
-
-        window.addEventListener('beforeunload', (e) => {
-            this.recordViolation('Page reload attempted');
-            e.preventDefault();
-            e.returnValue = '';
-        });
-    }
-
-    async recordViolation(type) {
-        const violation = {
-            type,
-            timestamp: new Date().toISOString(),
-            tabSwitchCount: ++this.tabSwitchCount
-        };
-
-        this.violations.push(violation);
-        this.showWarning();
-
-        try {
-            await fetch(`{% url 'cheated' %}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCsrfToken()
-                },
-                body: JSON.stringify({
-                    id: this.applicationId
-                })
-            });
-        } catch (error) {
-            console.error('Error recording violation:', error);
-        }
-    }
-
-    showWarning() {
-        const warning = document.getElementById('malpracticeWarning');
-        warning.style.display = 'block';
-        setTimeout(() => {
-            warning.style.display = 'none';
-        }, 3000);
-    }
-
-    getCsrfToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]').value;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const applicationId = '{{ applicationId }}';
-    new ChatInterface(applicationId);
-    new MalpracticeDetector(applicationId);
-});
-    document.addEventListener("DOMContentLoaded", function () {
-        var isCheated = {{ is_cheated|lower }}; // Convert Python boolean to JavaScript boolean
-
-        if (isCheated) {
-            alert("Access denied. Cheating detected!");
-            window.location.href = "{% url 'home' %}"; // Redirect to a blocked page
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+    responseInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
         }
     });
+
+    // Initialize cheating detector
+    const cheatingDetector = new CheatingDetector(applicationId);
+    if (isCheated) {
+        cheatingDetector.hasCheated = true;
+    }
+
+    // Scroll to bottom of chat on load
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 </script>
 </body>
 </html>

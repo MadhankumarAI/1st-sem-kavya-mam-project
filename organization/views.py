@@ -20,56 +20,7 @@ from django.contrib import messages
 def getpostings(request):
     jobs = postings.objects.all().order_by('-id')
     return render(request, 'organization/postings.html', {'jobs': jobs})
-def register(request):
-    if request.method == 'POST':
-        # Extract data from the POST request
-        org_name = request.POST.get('orgname')
-        email = request.POST.get('email')
-        password = request.POST.get('password1')
-        address = request.POST.get('address')
-        description = request.POST.get('description')
 
-        # Validate required fields
-        if not all([org_name, email, password, address, description]):
-            return render(request, 'users/register.html', {
-                'error': 'All fields are required.'
-            })
-
-        # Check if the user already exists in the User table
-        if User.objects.filter(email=email).exists():
-            return render(request, 'users/register.html', {
-                'error': 'A user with this email already exists.'
-            })
-
-        # Check if the organization already exists in the organization table
-        if organization.objects.filter(orgname=org_name).exists():
-            return render(request, 'users/register.html', {
-                'error': 'An organization with this name already exists.'
-            })
-
-        # Store user data in the session for later use
-        user_data = {
-            'username': org_name,
-            'email': email,
-            'password': password,
-            'address': address,
-            'description': description,
-        }
-        request.session['pending_user'] = user_data
-
-        # Generate and store a verification code
-        code = generate_verification_code()
-        request.session['verification_code'] = code
-        request.session['code_generated_at'] = now().timestamp()
-
-        # Send verification email
-        send_verification_email(email, code)
-
-        # Redirect to the email verification page
-        return redirect('verify_email')
-
-    # Render the registration form for GET requests
-    return render(request, 'users/register.html')
 
 def verify_email(request):
     # Check if we have pending registration
@@ -143,7 +94,7 @@ def resend_code(request):
             return JsonResponse({'success': False, 'error': str(e)})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
-def login_view(request):
+def orglogin_view(request):
     if request.method == 'POST':
         # Extract data from the POST request
         username = request.POST.get('username')
@@ -151,24 +102,19 @@ def login_view(request):
 
         # Validate required fields
         if not all([username, password]):
-            return render(request, 'users/login.html', {
+            return render(request, 'organization/orglogin.html', {
                 'error': 'Both username and password are required.'
             })
 
-        # Authenticate the user
         user = authenticate(request, username=username, password=password)
         if user is not None:
             # Check if the user belongs to an organization
             try:
                 org = organization.objects.get(org=user)
-                # Log the user in
                 login(request, user)
-                # Store organization details in the session (optional)
-                request.session['org_id'] = org.id
-                request.session['org_name'] = org.orgname
                 return redirect('home')  # Redirect to the home page or dashboard
             except organization.DoesNotExist:
-                return render(request, 'users/login.html', {
+                return render(request, 'organization/orglogin.html', {
                     'error': 'This user is not associated with any organization.'
                 })
         else:
@@ -726,7 +672,35 @@ def leaderboard_view(request, interview_id):
         'interview': interview
     }
     return render(request, 'organization/leaderboard.html', context)
+@login_required(login_url='reg/')
+def editCompanyProfile(request):
+    user_profile= organization.objects.get(org=request.user)
+    if user_profile is None:
+        messages.error(request,'You are not an organization')
+        return redirect('login')
+    if request.method == 'POST':
+        print("FILES:", request.FILES)  # Debug print
+        form = EditCompanyForm(request.POST, request.FILES, instance=user_profile)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.org = request.user
 
+            if 'photo' in request.FILES:
+                profile.photo = request.FILES['photo']
+
+            profile.save()
+            return redirect('home')
+        else:
+            print("Form errors:", form.errors)  # Debug print
+    else:
+        form = EditCompanyForm(instance=user_profile)
+
+    # Add context to show current photo
+    context = {
+        'form': form,
+        'current_photo': user_profile.photo if user_profile.photo else None
+    }
+    return render(request, 'organization/editCompany.html', {'form': form})
 # cap = None
 # detector = dlib.get_frontal_face_detector()
 # predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
