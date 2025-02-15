@@ -30,8 +30,4 @@ urlpatterns = [
     path('compdash/',views.companyDashboard,name='compdash'),
     path('apply/<int:interview_id>/', apply_interview, name='apply_interview'),
 
-    # path('video_feed/', views.video_feed, name='video_feed'),
-    # path('toggle_camera/', views.toggle_camera, name='toggle_camera'),
-    # path('end_meeting/', views.end_meeting, name='end_meeting'),
-    # path('confidence_scores/', views.get_confidence_scores, name='confidence_scores'),
 ]

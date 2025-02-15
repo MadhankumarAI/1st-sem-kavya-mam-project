@@ -32,6 +32,7 @@ class Application(models.Model):
     isCheated = models.BooleanField(default=False)
     completed = models.BooleanField(default=False)
     score = models.IntegerField(default=0)
+    virtualresume = models.TextField(blank=True,null=True)
     def __str__(self):
         return f'{self.user.username}-{self.interview.org.orgname}'
 class Customconversation(models.Model):
