@@ -1,4 +1,4 @@
-![Nexgen 2.0](https://github.com/MadhankumarAI/1st-sem-kavya-mam-project/blob/main/Photos/images.jpg)
+## Nexgen 2.0
 
 # InterXAI - Revolutionizing Interview Preparation and Recruitment
 
