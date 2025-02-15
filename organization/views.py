@@ -1,11 +1,13 @@
-from operator import truediv
-
+import datetime
+from users.models import *
 import groq
+import requests
+from bs4 import BeautifulSoup
+
+from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_200_OK
-from .models import *
+
 from .forms import *
 from .utils import *
 from django.shortcuts import render, redirect, get_object_or_404
@@ -14,7 +16,6 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.utils import timezone
 import json
 from django.contrib import messages
-
 
 
 def getpostings(request):
@@ -434,7 +435,6 @@ def evaluate_interview(request, application_id):
                 f"Job Post: {interview.post}\nExperience Required: {interview.experience}\nDescription: {interview.desc}"
             )
             technical_scores.append(technical_score)
-        print(12345)
         # Evaluate corporate fit
         corporate_fit_score = evaluate_corporate_fit(
             groq_client,
@@ -537,45 +537,6 @@ def available_interviews(request):
         'current_time': current_time,
     }
     return render(request, 'organization/available_interviews.html', context)
-
-@login_required
-def apply_interview(request, interview_id):
-    if request.method == 'POST':
-        try:
-            interview = Custominterviews.objects.get(id=interview_id)
-
-            # Check if deadline has passed
-            if interview.submissionDeadline < timezone.now():
-                messages.error(request, 'Application deadline has passed.')
-                return redirect('available_interviews')
-
-            # Check if already applied
-            if Application.objects.filter(user=request.user, interview_id=interview_id).exists():
-                messages.error(request, 'You have already applied for this interview.')
-                return redirect('available_interviews')
-
-            # Handle resume upload
-            resume = request.FILES.get('resume')
-            if not resume:
-                messages.error(request, 'Please upload your resume.')
-                return redirect('available_interviews')
-
-            # Create application
-            Application.objects.create(
-                user=request.user,
-                interview=interview,
-                resume=resume
-            )
-
-            messages.success(request, 'Successfully applied for the interview.')
-
-        except Custominterviews.DoesNotExist:
-            messages.error(request, 'Interview not found.')
-        except Exception as e:
-            messages.error(request, f'Error applying for interview: {str(e)}')
-
-    return redirect('available_interviews')
-
 
 @login_required
 def company_interviews(request):
@@ -709,146 +670,208 @@ def companyDashboard(request):
         return redirect('home')
     else :
         return render(request,'organization/companydashboard.html')
-# cap = None
-# detector = dlib.get_frontal_face_detector()
-# predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-# confidence_scores = []
-# emotion_scores = {
-#     "happy": 0, "neutral": 0, "surprise": 0,
-#     "sad": 0, "fear": 0, "angry": 0, "disgust": 0
-# }
-# lock = threading.Lock()
-#
-#
-# def detect_face_not_looking(frame):
-#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#     faces = detector(gray)
-#
-#     if len(faces) > 1:
-#         return "multiple_faces"
-#
-#     for face in faces:
-#         landmarks = predictor(gray, face)
-#         image_points = np.array([
-#             (landmarks.part(36).x, landmarks.part(36).y),
-#             (landmarks.part(45).x, landmarks.part(45).y),
-#             (landmarks.part(30).x, landmarks.part(30).y),
-#             (landmarks.part(48).x, landmarks.part(48).y),
-#             (landmarks.part(54).x, landmarks.part(54).y)
-#         ], dtype="double")
-#
-#         centroid_x, centroid_y = np.mean(image_points[:, 0]), np.mean(image_points[:, 1])
-#         frame_center_x, frame_center_y = frame.shape[1] // 2, frame.shape[0] // 2
-#         distance_x, distance_y = abs(centroid_x - frame_center_x), abs(centroid_y - frame_center_y)
-#
-#         threshold_x, threshold_y = 30, 50
-#         return distance_x > threshold_x or distance_y > threshold_y
-#     return False
-#
-#
-# def analyze_emotions():
-#     global cap
-#     confidence_map = {
-#         "happy": 0.9, "neutral": 0.8, "surprise": 0.7,
-#         "sad": 0.5, "fear": 0.4, "angry": 0.3, "disgust": 0.2
-#     }
-#
-#     while True:
-#         if cap and cap.isOpened():
-#             ret, frame = cap.read()
-#             if ret:
-#                 try:
-#                     result = DeepFace.analyze(frame, actions=["emotion"], enforce_detection=False)
-#                     if result:
-#                         dominant_emotion = result[0]['dominant_emotion']
-#                         confidence_score = confidence_map.get(dominant_emotion, 0.5)
-#                         with lock:
-#                             confidence_scores.append(confidence_score)
-#                             if dominant_emotion in emotion_scores:
-#                                 emotion_scores[dominant_emotion] += 1
-#
-#                         # Store in database
-#                         Customconversation.objects.create(
-#                             confidence_score=confidence_score,
-#
-#                         )
-#                 except Exception as e:
-#                     print("Emotion detection error:", e)
-#         time.sleep(2)
-#
-#
-# emotion_thread = threading.Thread(target=analyze_emotions, daemon=True)
-# emotion_thread.start()
-#
-#
-# def gen():
-#     global cap
-#     while cap and cap.isOpened():
-#         ret, frame = cap.read()
-#         if not ret:
-#             break
-#
-#         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#         faces = detector(gray)
-#         warning_message = None
-#
-#         if len(faces) > 1:
-#             warning_message = "Warning: Multiple faces detected!"
-#             for face in faces:
-#                 x, y, w, h = face.left(), face.top(), face.width(), face.height()
-#                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-#         elif detect_face_not_looking(frame):
-#             warning_message = "Warning: Not looking at the camera!"
-#
-#         if warning_message:
-#             cv2.putText(frame, warning_message, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-#
-#         _, jpeg = cv2.imencode('.jpg', frame)
-#         yield (b'--frame\r\n'
-#                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
-#
-#
-# def index(request):
-#     return render(request, 'interview/interview.html')
-#
-#
-# def video_feed(request):
-#     global cap
-#     if cap and cap.isOpened():
-#         return StreamingHttpResponse(gen(), content_type='multipart/x-mixed-replace; boundary=frame')
-#     return HttpResponse("Camera is off. Click 'Start Camera' to begin.")
-#
-#
-# @csrf_exempt
-# def toggle_camera(request):
-#     global cap
-#     if cap is None or not cap.isOpened():
-#         cap = cv2.VideoCapture(0)
-#         return HttpResponse("Camera started" if cap.isOpened() else "Failed to start camera.")
-#     else:
-#         cap.release()
-#         return HttpResponse("Camera stopped")
-#
-#
-# def end_meeting(request):
-#     global cap
-#     if cap and cap.isOpened():
-#         cap.release()
-#
-#     total_score = sum(confidence_scores)
-#     emotion_icons = {
-#         "happy": "😊", "neutral": "😐", "surprise": "😲",
-#         "sad": "😢", "fear": "😨", "angry": "😠", "disgust": "🤢"
-#     }
-#
-#     return render(request, 'interview/meeting_ended.html', {
-#         'confidence_scores': confidence_scores,
-#         'emotion_scores': emotion_scores,
-#         'total_score': total_score,
-#         'emotion_icons': emotion_icons
-#     })
-#
-#
-# def get_confidence_scores(request):
-#     with lock:
-#         return JsonResponse({"confidence_scores": confidence_scores})
+
+
+def fetch_leetcode_stats(username):
+    """Fetch LeetCode statistics using public profile scraping"""
+    if not username:
+        return None
+
+    url = f"https://leetcode.com/{username}"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Find the problems solved count
+        solved_problems = soup.find('div', {'class': 'text-[24px]'})
+        if solved_problems:
+            return {
+                'total_solved': int(solved_problems.text.strip()),
+                'profile_url': url
+            }
+    except Exception as e:
+        print(f"Error fetching LeetCode stats: {e}")
+    return None
+
+
+def fetch_github_stats(username):
+    """Fetch GitHub statistics using public API endpoints"""
+    if not username:
+        return None
+
+    try:
+        headers = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Mozilla/5.0'
+        }
+
+        # Get basic profile info
+        profile_response = requests.get(f"https://api.github.com/users/{username}", headers=headers)
+        if profile_response.status_code != 200:
+            return None
+        profile_data = profile_response.json()
+
+        # Get repositories
+        repos_response = requests.get(f"https://api.github.com/users/{username}/repos", headers=headers)
+        repos_data = repos_response.json() if repos_response.status_code == 200 else []
+
+        # Get languages from repos
+        languages = set()
+        for repo in repos_data[:5]:  # Limit to first 5 repos
+            if repo.get('language'):
+                languages.add(repo.get('language'))
+
+        # Estimate contributions
+        contribution_count = sum(
+            1 for repo in repos_data
+            if repo.get('updated_at') and
+            datetime.strptime(repo['updated_at'], '%Y-%m-%dT%H:%M:%SZ') > datetime.now() - timedelta(days=365)
+        )
+
+        return {
+            'public_repos': profile_data.get('public_repos', 0),
+            'contributions': contribution_count,
+            'languages': list(languages),
+            'profile_url': profile_data.get('html_url'),
+            'followers': profile_data.get('followers', 0),
+            'following': profile_data.get('following', 0)
+        }
+    except Exception as e:
+        print(f"Error fetching GitHub stats: {e}")
+    return None
+
+
+def analyze_profile_with_groq(leetcode_stats, github_stats, job_role, job_description):
+    """Analyze profile using Groq API"""
+    try:
+        client = groq.Client(api_key="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")
+
+        # Prepare the analysis prompt
+        prompt = f"""
+        Analyze this candidate's technical profile:
+
+        LeetCode Statistics:
+        - Problems Solved: {leetcode_stats.get('total_solved') if leetcode_stats else 'No data'}
+
+        GitHub Statistics:
+        - Public Repositories: {github_stats.get('public_repos') if github_stats else 'No data'}
+        - Programming Languages: {', '.join(github_stats.get('languages', [])) if github_stats else 'No data'}
+        - Recent Contributions: {github_stats.get('contributions') if github_stats else 'No data'}
+
+        For this job:
+        Role: {job_role}
+        Description: {job_description}
+
+        Based on their technical profile, rate their fit for this role on a scale of 0-20.
+        Consider:
+        1. Problem-solving skills (LeetCode performance)
+        2. Real-world coding experience (GitHub activity)
+        3. Technology stack match (Languages used vs job requirements)
+        4. Active coding practice (Recent contributions)
+
+        Return only a numeric score between 0 and 20.
+        """
+
+        response = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="mixtral-8x7b-32768",
+            temperature=0.1,
+        )
+
+        # Extract and validate score
+        try:
+            score = float(response.choices[0].message.content.strip())
+            return min(max(score, 0), 20)  # Ensure score is between 0 and 20
+        except (ValueError, AttributeError):
+            return 10  # Default score if parsing fails
+
+    except Exception as e:
+        print(f"Error in Groq analysis: {e}")
+        return 10  # Default score if analysis fails
+
+
+def calculate_profile_score(leetcode_stats, github_stats, job_role, job_description):
+    """Calculate overall profile score"""
+    score = 0
+
+    # LeetCode scoring (max 40 points)
+    if leetcode_stats:
+        problems_solved = leetcode_stats.get('total_solved', 0)
+        score += min(problems_solved / 5, 40)
+
+    # GitHub scoring (max 40 points)
+    if github_stats:
+        repos = github_stats.get('public_repos', 0)
+        contributions = github_stats.get('contributions', 0)
+        languages = len(github_stats.get('languages', []))
+        score += min((repos * 2) + (languages * 2) + (contributions / 100), 40)
+
+    # Job relevance scoring from Groq (max 20 points)
+    groq_score = analyze_profile_with_groq(leetcode_stats, github_stats, job_role, job_description)
+    score += groq_score
+
+    return min(round(score, 2), 100)
+
+
+def apply_interview(request, interview_id):
+    if request.method == 'POST':
+        try:
+            # Get interview
+            interview = Custominterviews.objects.get(id=interview_id)
+
+            # Check deadline
+            if interview.submissionDeadline < timezone.now():
+                messages.error(request, 'Application deadline has passed.')
+                return redirect('available_interviews')
+
+            # Check if already applied
+            if Application.objects.filter(user=request.user, interview_id=interview_id).exists():
+                messages.error(request, 'You have already applied for this interview.')
+                return redirect('available_interviews')
+
+            # Handle resume upload
+            resume = request.FILES.get('resume')
+            if not resume:
+                messages.error(request, 'Please upload your resume.')
+                return redirect('available_interviews')
+
+            # Get user profile
+            try:
+                user_profile = UserProfile.objects.get(user=request.user)
+            except UserProfile.DoesNotExist:
+                messages.error(request, 'Please complete your profile first.')
+                return redirect('profile_setup')
+
+            # Fetch profile stats
+            leetcode_stats = fetch_leetcode_stats(user_profile.leetcode)
+            github_stats = fetch_github_stats(user_profile.github)
+
+            # Calculate profile score
+            profile_score = calculate_profile_score(
+                leetcode_stats,
+                github_stats,
+                interview.post,
+                interview.desc
+            )
+
+            # Create application
+            application = Application.objects.create(
+                user=request.user,
+                interview=interview,
+                resume=resume,
+                score=profile_score,
+
+            )
+
+            messages.success(request, 'Application submitted successfully!')
+            return redirect('application_status', application_id=application.id)
+
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('available_interviews')
+
+    return redirect('available_interviews')

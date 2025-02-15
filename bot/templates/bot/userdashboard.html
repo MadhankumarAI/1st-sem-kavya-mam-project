@@ -16,7 +16,9 @@
             --gray-200: #e2e8f0;
             --text-dark: #1e293b;
         }
-
+        a {
+        text-decoration :none;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -83,6 +85,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            text-decoration : None;
         }
 
         .nav-item {
@@ -309,20 +312,20 @@
                     <i class="fas fa-home"></i> Dashboard
                 </li> </a>
                 <a href="{% url 'postings' %}"> <li class="nav-item">
-                    <i class="fas fa-video"></i> Job Postings
+                    <i class="fas fa-briefcase "></i> Job Postings
                 </li></a>
                 <a href="{% url 'ats' %}"> <li class="nav-item">
                     <i class="fas fa-file-alt"></i> Resume Evaluator
                 </li></a>
               <a href="{% url 'gc' %}">  <li class="nav-item">
-                    <i class="fas fa-briefcase"></i> Community
+                    <i class="fa-solid fa-user-group"></i> Community
                 </li> </a>
-                <li class="nav-item">
-                   <a href="{% url 'available_interviews' %}">  <i class="fas fa-briefcase"></i> Available Interviews
+                <a href="{% url 'available_interviews' %}"> <li class="nav-item">
+                    <i class="fas fa-video"></i> Available Interviews
                 </li> </a>
                 {% if a %}
                <a href="{% url 'compdash' %}"> <li class="nav-item">
-                    <i class="fas fa-cog"></i> Continue as organization
+                    <i class="fa-solid fa-building"></i> Continue as organization
                 </li></a>
                 {% else %}
                 <li class="nav-item">
@@ -330,8 +333,13 @@
                 </li>
                 {% endif %}
                  <a href="{% url 'editprofile' %}">  <li class="nav-item">
-                    <i class="fas fa-briefcase"></i> Settings
+                    <i class="fas fa-cog"></i> Settings
                 </li> </a>
+                <a href="{% url 'roadmaps' %}">
+                    <li class="nav-item">
+                        <i class="fa-solid fa-map-location"></i> roadmaps
+                    </li>
+                </a>
             </ul>
         </aside>
 

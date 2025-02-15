@@ -147,6 +147,16 @@
             animation: fadeIn 0.3s ease-in;
         }
 
+        .end-interview-button {
+            padding: 12px 18px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translate(-50%, -20px); }
             to { opacity: 1; transform: translate(-50%, 0); }
@@ -176,6 +186,7 @@
         <div class="chat-footer">
             <input id="response-input" type="text" placeholder="Type your response...">
             <button class="send-button" id="send-button">Send</button>
+            <button class="end-interview-button" id="end-interview-button">End Interview</button>
         </div>
     </div>
 </div>
@@ -185,6 +196,7 @@
     const applicationId = {{ applicationId|safe }};
     const isCheated = {{ is_cheated|yesno:"true,false" }};
     let isInterviewComplete = false;
+    let isEndInterviewClicked = false; // Flag to track if "End Interview" is clicked
 
     // Redirect to home if cheating is detected
     if (isCheated) {
@@ -207,18 +219,22 @@
         initializeDetection() {
             // Detect page refresh
             window.addEventListener('beforeunload', () => {
-                this.handleCheating();
-            });
-
-            // Detect tab switch or window blur
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
+                if (!isEndInterviewClicked) { // Skip if "End Interview" is clicked
                     this.handleCheating();
                 }
             });
 
+            // Detect tab switch or window blur
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && !isEndInterviewClicked) { // Skip if "End Interview" is clicked
+                    location.reload(); // Reload the page when tab is switched
+                }
+            });
+
             window.addEventListener('blur', () => {
-                this.handleCheating();
+                if (!isEndInterviewClicked) { // Skip if "End Interview" is clicked
+                    this.handleCheating();
+                }
             });
         }
 
@@ -341,6 +357,33 @@
             console.error('Error sending message:', error);
         }
     }
+
+    // End Interview Button Functionality
+    const endInterviewButton = document.getElementById('end-interview-button');
+    endInterviewButton.addEventListener('click', async () => {
+        if (isInterviewComplete) return;
+
+        isEndInterviewClicked = true; // Set flag to true
+        isInterviewComplete = true;
+
+        try {
+            const response = await fetch('{% url "evaluate" applicationId %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            if (response.ok) {
+                window.location.href = '{% url "home" %}';
+            } else {
+                console.error('Failed to end interview');
+            }
+        } catch (error) {
+            console.error('Error ending interview:', error);
+        }
+    });
 
     // Event listeners
     sendButton.addEventListener('click', sendMessage);

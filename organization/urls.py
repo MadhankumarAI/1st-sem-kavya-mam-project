@@ -1,8 +1,7 @@
-
-
 from django.urls import path, include
 
 from . import views
+from .views import apply_interview
 
 urlpatterns = [
 
@@ -23,13 +22,14 @@ urlpatterns = [
     path('chat-<str:convoid>/', views.compchat, name='compchat'),
     path('evaluate-<application_id>/',views.evaluate_interview,name='evaluate'),
     path('interviews/', views.available_interviews, name='available_interviews'),
-    path('interviews/apply/<int:interview_id>/', views.apply_interview, name='apply_interview'),
     path('company/interviews/', views.company_interviews, name='company_interviews'),
     path('company/interviews/<int:interview_id>/applications/', views.company_applications,name='company_applications'),
     path('company/applications/approve/<int:application_id>/', views.approve_application, name='approve_application'),
     path('leaderboard/<int:interview_id>/', views.leaderboard_view, name='leaderboard'),
     path('edit',views.editCompanyProfile,name='editcompany'),
-    path('compdash/',views.companyDashboard,name='compdash')
+    path('compdash/',views.companyDashboard,name='compdash'),
+    path('apply/<int:interview_id>/', apply_interview, name='apply_interview'),
+
     # path('video_feed/', views.video_feed, name='video_feed'),
     # path('toggle_camera/', views.toggle_camera, name='toggle_camera'),
     # path('end_meeting/', views.end_meeting, name='end_meeting'),

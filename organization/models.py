@@ -31,6 +31,7 @@ class Application(models.Model):
     attempted = models.BooleanField(default=False)
     isCheated = models.BooleanField(default=False)
     completed = models.BooleanField(default=False)
+    score = models.IntegerField(default=0)
     def __str__(self):
         return f'{self.user.username}-{self.interview.org.orgname}'
 class Customconversation(models.Model):
