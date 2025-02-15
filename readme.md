@@ -1,5 +1,9 @@
+# NextGen 2.0 
+
 # InterXAI - Revolutionizing Interview Preparation and Recruitment
 
+Team Name: Codezero
+Team Number:12
 ## Problem Statement
 
 In today's competitive job market, traditional interview preparation methods often fail to align with real-world hiring processes. Candidates struggle with mock interviews that lack real-time feedback, and companies face inefficiencies in evaluating potential hires.
@@ -103,25 +107,11 @@ The leaderboard ranks users based on:
 
 ### Deploy Backend on Render
 
-1. Push your code to GitHub
-2. Go to [Render.com](https://render.com) → New Web Service
-3. Connect GitHub repo & set environment variables
-4. Deploy!
+---------------------------?
 
-### Deploy Frontend on Vercel
 
-```bash
-npm install -g vercel
-vercel
-```
 
----
 
-## License
-
-This project is open-source and licensed under the MIT License.
-
----
 
 ## Conclusion
 
@@ -129,5 +119,4 @@ InterXAI is transforming how candidates prepare for interviews and how companies
 
 ---
 
-Let me know if you'd like any modifications!
 
