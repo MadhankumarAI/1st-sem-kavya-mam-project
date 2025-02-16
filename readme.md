@@ -201,7 +201,49 @@ Before starting, make sure you have the following installed on your machine:
 #### **1. Create a Virtual Environment**
 
 - **For Windows**: python -m venv venv
+- **For Mac**: python3 -m venv venv
+
+
+#### **1. Create a Virtual Environment**
+
 - **For Windows**: python -m venv venv
+- **For Mac**: python3 -m venv venv
+
+
+#### **2. Activate the Virtual Environment**
+
+- **For Windows**: venv\Scripts\activate
+- **For Mac**: source venv/bin/activate
+
+
+#### **3. Clone this repo**
+
+- **For Windows**: git clone https://github.com/MadhankumarAI/1st-sem-kavya-mam-project.git
+- **For Mac**: git clone https://github.com/MadhankumarAI/1st-sem-kavya-mam-project.git 
+
+
+#### **4. Change directory**
+
+- **For Windows**: cd streamlit_botAi
+- **For Mac**: cd streamlit_botAi
+
+
+#### **5. Install the requirements **
+
+- **For Windows**: pip install -r requirements.txt
+- **For Mac**: pip3 install -r requirements.txt
+
+
+#### **5. Run **
+
+- **For Windows**: python manage.py
+- **For Mac**: python3 manage.py
+
+
+#### **6. Run **
+
+- **For Windows**: python manage.py runserver
+- **For Mac**: python3 manage.py runserver
 
 
 
