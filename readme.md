@@ -183,6 +183,26 @@ The leaderboard ranks users based on:
 
 ---
 
+## **Local Run Guide** 🖥️
+
+Follow these steps to run the project locally:
+
+### **Prerequisites**:
+Before starting, make sure you have the following installed on your machine:
+
+- Python 3.x
+- PostgreSQL
+- Git
+
+---
+
+### **Steps to Run Locally**:
+
+#### **1. Create a Virtual Environment**
+
+- **For Windows**: python -m venv venv
+- **For Windows**: python -m venv venv
+
 
 
 ## Conclusion
